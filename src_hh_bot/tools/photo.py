@@ -1,9 +1,9 @@
-from sqlalchemy import select
-from db import Photo
-from init_db import _sessionmaker_for_func
+from aiogram.utils.media_group import MediaGroupBuilder
 
 
-async def get_id_photo(name: str) -> str:
-    async with _sessionmaker_for_func() as session:
-        photo_id = await session.scalar(select(Photo.photo_id).where(Photo.name == name))
-        return photo_id
+def parser_ids_photo(string_ids: str):
+    ids = list(map(lambda x: x.strip(), string_ids.split()))
+    media_group = MediaGroupBuilder()
+    for id_ in ids:
+       media_group.add_photo(media=id_)
+    return media_group.build()

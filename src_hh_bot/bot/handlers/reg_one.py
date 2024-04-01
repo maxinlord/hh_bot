@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User, Value
-from tools import get_text_message, get_id_photo, form_not_complete
+from tools import get_text_message, form_not_complete
 from bot.states import FormOneState
 from bot.keyboards import (
     Form,
@@ -15,6 +15,7 @@ from bot.keyboards import (
     k_form_fields,
     k_options_for_photo,
     k_gen_bttn_tags,
+    k_main_menu,
 )
 from bot.filters import GetTextButton
 
@@ -153,10 +154,20 @@ async def form_one_field_5(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.delete()
-    await query.message.answer(
-        text=await get_text_message("form_one_field_5"),
-        reply_markup=await k_options_for_photo(),
-    )
+    data = await state.get_data()
+    match res := len(data["photos_id"]):
+        case 0:
+            await query.message.answer(
+                text=await get_text_message("form_one_field_5"),
+                reply_markup=await k_options_for_photo(),
+            )
+        case _:
+            await query.message.answer(
+                text=await get_text_message(
+                    "form_one_field_5_photo_has", quantity_photo=res
+                ),
+                reply_markup=await k_options_for_photo(),
+            )
     await state.set_state(FormOneState.field_5)
 
 
@@ -180,15 +191,35 @@ async def get_photos(
     await message.answer_media_group(media=media_group.build())
 
 
-@router.message(FormOneState.field_5, GetTextButton("back"))
+@router.message(FormOneState.field_5, GetTextButton("confirm"))
 async def form_one_back(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
+    if len(data["photos_id"]) == 0:
+        await message.answer(text=await get_text_message("no_photos"))
+        return
     text = await get_text_message("field_5", quantity_photo=len(data["photos_id"]))
     data = await state.update_data(field_5=text)
     await message.answer(
         text=await get_text_message("back_to_form_one"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        text=await get_text_message("form_one", **data),
+        reply_markup=await k_form_fields(),
+    )
+    await state.set_state(FormOneState.main)
+
+
+@router.message(FormOneState.field_5, GetTextButton("skip"))
+async def form_one_skip_photo(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    text = await get_text_message("field_5_skip_photo")
+    data = await state.update_data(field_5=text, photos_id=list())
+    await message.answer(
+        text=await get_text_message("photo_was_skipped"),
         reply_markup=ReplyKeyboardRemove(),
     )
     await message.answer(
@@ -211,7 +242,9 @@ async def form_one_end_reg(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
-    if list_field_not_complete := await form_not_complete(data=data, field_to_skip=['field_5']):
+    if list_field_not_complete := await form_not_complete(
+        data=data, field_to_skip=["field_5"]
+    ):
         await query.answer(
             text=await get_text_message(
                 "form_not_complete",
@@ -220,6 +253,15 @@ async def form_one_end_reg(
             show_alert=True,
         )
         return
-    await query.message.edit_text(
-        text=await get_text_message("form_complete"), reply_markup=None
+    user.form_type = "one"
+    user.field_1 = data["field_1"]
+    user.field_2 = data["field_2"]
+    user.field_3 = data["field_3"]
+    user.field_4 = data["field_4"]
+    user.field_5 = ", ".join(data["photos_id"]) if len(data["photos_id"]) != 0 else None
+    await session.commit()
+    await state.clear()
+    await query.message.edit_reply_markup(reply_markup=None)
+    await query.message.answer(
+        text=await get_text_message("form_complete"), reply_markup=await k_main_menu()
     )

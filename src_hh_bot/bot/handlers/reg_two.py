@@ -8,7 +8,13 @@ from bot.filters import GetTextButton
 from bot.keyboards import Form
 from db import User, Value
 from tools import get_text_message, form_not_complete
-from bot.keyboards import k_form_fields, k_options_for_photo, k_gen_bttn_tags, Tag
+from bot.keyboards import (
+    k_form_fields,
+    k_options_for_photo,
+    k_main_menu,
+    k_gen_bttn_tags,
+    Tag,
+)
 from bot.states import FormTwoState
 
 
@@ -175,7 +181,7 @@ async def get_photos_two(
     await message.answer_media_group(media=media_group.build())
 
 
-@router.message(FormTwoState.field_5, GetTextButton("back"))
+@router.message(FormTwoState.field_5, GetTextButton("confirm"))
 async def form_two_back(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
@@ -217,6 +223,15 @@ async def form_two_end_reg(
             show_alert=True,
         )
         return
-    await query.message.edit_text(
-        text=await get_text_message("form_complete"), reply_markup=None
+    user.form_type = "two"
+    user.field_1 = data["field_1"]
+    user.field_2 = data["field_2"]
+    user.field_3 = data["field_3"]
+    user.field_4 = data["field_4"]
+    user.field_5 = ", ".join(data["photos_id"]) if len(data["photos_id"]) != 0 else None
+    await session.commit()
+    await state.clear()
+    await query.message.edit_reply_markup(reply_markup=None)
+    await query.message.answer(
+        text=await get_text_message("form_complete"), reply_markup=await k_main_menu()
     )

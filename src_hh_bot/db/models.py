@@ -5,6 +5,7 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
+    Text,
     DECIMAL,
     DateTime,
     Boolean,
@@ -20,6 +21,14 @@ class User(Base):
 
     id_user: Mapped[int] = mapped_column(BigInteger, unique=True)
     username: Mapped[str] = mapped_column(String(length=64))
+    name: Mapped[str] = mapped_column(String(length=64))
+    date_reg: Mapped[str] = mapped_column(DateTime)
+    form_type: Mapped[str] = mapped_column(String(length=64), nullable=True)
+    field_1: Mapped[str] = mapped_column(Text(4096), nullable=True)
+    field_2: Mapped[str] = mapped_column(Text(4096), nullable=True)
+    field_3: Mapped[str] = mapped_column(Text(4096), nullable=True)
+    field_4: Mapped[str] = mapped_column(Text(4096), nullable=True)
+    field_5: Mapped[str] = mapped_column(Text(4096), nullable=True)
 
 
 class Text(Base):
@@ -40,13 +49,6 @@ class Button(Base):
     )  # Текст кнопки
 
 
-class Photo(Base):
-    __tablename__ = "photos"
-
-    name: Mapped[str] = mapped_column(String(length=30))  # Название фото
-    photo_id: Mapped[str] = mapped_column(String(length=100))  # Ссылка на фото
-
-
 class BlackList(Base):
     __tablename__ = "blacklist"
 
@@ -59,4 +61,6 @@ class Value(Base):
 
     name: Mapped[str] = mapped_column(String(length=30))  # Название значения
     value_int: Mapped[int] = mapped_column(default=0)  # Значение целое
-    value_str: Mapped[str] = mapped_column(String(length=4096), default="не установлено")  # Значение строка
+    value_str: Mapped[str] = mapped_column(
+        String(length=4096), default="не установлено"
+    )  # Значение строка

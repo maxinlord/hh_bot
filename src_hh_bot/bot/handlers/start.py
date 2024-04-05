@@ -22,14 +22,13 @@ async def command_start(
 ) -> None:
     await state.clear()
     if not user:
-        session.add(
-            User(
-                id_user=message.from_user.id,
-                username=message.from_user.username,
-                name=message.from_user.full_name,
-                date_reg=datetime.now(),
-            )
+        user = User(
+            id_user=message.from_user.id,
+            username=message.from_user.username,
+            name=message.from_user.full_name,
+            date_reg=datetime.now(),
         )
+        session.add(user)
         await session.commit()
     if not user.form_type:
         await message.answer(

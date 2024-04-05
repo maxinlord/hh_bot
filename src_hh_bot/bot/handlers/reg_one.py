@@ -14,7 +14,7 @@ from bot.keyboards import (
     Tag,
     k_form_fields,
     k_options_for_photo,
-    k_gen_bttn_tags,
+    k_gen_bttn_tags_inline,
     k_main_menu,
 )
 from bot.filters import GetTextButton
@@ -128,7 +128,7 @@ async def form_one_field_4(
 ) -> None:
     await query.message.edit_text(
         text=await get_text_message("form_one_field_4"),
-        reply_markup=await k_gen_bttn_tags(),
+        reply_markup=await k_gen_bttn_tags_inline(),
     )
     await state.set_state(FormOneState.field_4)
 
@@ -233,7 +233,7 @@ async def form_one_skip_photo(
 async def form_one_clear_selected(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    data = await state.update_data(field_5=0, photos_id=list())
+    await state.update_data(field_5=0, photos_id=list())
     await message.answer(text=await get_text_message("cleaned_up"))
 
 

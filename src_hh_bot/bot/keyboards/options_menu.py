@@ -14,6 +14,6 @@ async def k_options_for_photo():
 async def k_confirm_del_form():
     builder = ReplyKeyboardBuilder()
     builder.button(text=await get_text_button('confirm_delete_form'))
-    builder.button(text=await get_text_button('back'))
+    builder.button(text=await get_text_button('cancel'))
     builder.adjust(1)
-    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    return builder.as_markup(resize_keyboard=True)

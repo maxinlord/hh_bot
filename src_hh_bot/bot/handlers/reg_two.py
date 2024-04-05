@@ -12,7 +12,7 @@ from bot.keyboards import (
     k_form_fields,
     k_options_for_photo,
     k_main_menu,
-    k_gen_bttn_tags,
+    k_gen_bttn_tags_inline,
     Tag,
 )
 from bot.states import FormTwoState
@@ -128,7 +128,7 @@ async def form_two_field_4(
 ) -> None:
     await query.message.edit_text(
         text=await get_text_message("form_two_field_4"),
-        reply_markup=await k_gen_bttn_tags(),
+        reply_markup=await k_gen_bttn_tags_inline(),
     )
     await state.set_state(FormTwoState.field_4)
 
@@ -154,10 +154,20 @@ async def form_two_field_5(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.delete()
-    await query.message.answer(
-        text=await get_text_message("form_two_field_5"),
-        reply_markup=await k_options_for_photo(),
-    )
+    data = await state.get_data()
+    match res := len(data["photos_id"]):
+        case 0:
+            await query.message.answer(
+                text=await get_text_message("form_two_field_5"),
+                reply_markup=await k_options_for_photo(),
+            )
+        case _:
+            await query.message.answer(
+                text=await get_text_message(
+                    "form_two_field_5_photo_has", quantity_photo=res
+                ),
+                reply_markup=await k_options_for_photo(),
+            )
     await state.set_state(FormTwoState.field_5)
 
 
@@ -186,6 +196,9 @@ async def form_two_back(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
+    if len(data["photos_id"]) == 0:
+        await message.answer(text=await get_text_message("no_photos"))
+        return
     text = await get_text_message("field_5", quantity_photo=len(data["photos_id"]))
     data = await state.update_data(field_5=text)
     await message.answer(
@@ -194,7 +207,25 @@ async def form_two_back(
     )
     await message.answer(
         text=await get_text_message("form_two", **data),
-        reply_markup=await k_form_fields(form_type="two"),
+        reply_markup=await k_form_fields(form_type='two'),
+    )
+    await state.set_state(FormTwoState.main)
+
+
+
+@router.message(FormTwoState.field_5, GetTextButton("skip"))
+async def form_two_skip_photo(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    text = await get_text_message("field_5_skip_photo")
+    data = await state.update_data(field_5=text, photos_id=list())
+    await message.answer(
+        text=await get_text_message("photo_was_skipped"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        text=await get_text_message("form_two", **data),
+        reply_markup=await k_form_fields(form_type='two'),
     )
     await state.set_state(FormTwoState.main)
 
@@ -203,7 +234,7 @@ async def form_two_back(
 async def form_two_clear_selected(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    data = await state.update_data(field_5=0, photos_id=list())
+    await state.update_data(field_5=0, photos_id=list())
     await message.answer(text=await get_text_message("cleaned_up"))
 
 

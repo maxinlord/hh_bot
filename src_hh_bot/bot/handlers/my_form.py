@@ -1,13 +1,13 @@
 from datetime import datetime
 from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
 from bot.filters import GetTextButton
 from bot.states import FormOneState, FormTwoState
-from tools import get_text_message, parser_ids_photo, delete_form
+from tools import get_text_message, ids_to_media_group, delete_form, ids_to_list
 from bot.keyboards import (
     k_start_menu,
     k_types_of_reg,
@@ -26,29 +26,30 @@ router = Router()
 async def menu_my_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    if user.field_5:
-        await message.answer_media_group(media=parser_ids_photo(user.field_5))
     data = await state.get_data()
     data["field_1"] = user.field_1
     data["field_2"] = user.field_2
     data["field_3"] = user.field_3
     data["field_4"] = user.field_4
-    data["photos_id"] = (
-        list(map(lambda x: x.strip(), user.field_5.split(",")))
-        if user.field_5
-        else list()
-    )
+    data["photos_id"] = ids_to_list(user.field_5) if user.field_5 else list()
     data["field_5"] = (
         await get_text_message("field_5", quantity_photo=len(data["photos_id"]))
         if user.field_5
         else await get_text_message("field_5_skip_photo")
     )
-
     await state.update_data(data)
     await message.answer(
-        text=await get_text_message("my_form", **data),
+        text=await get_text_message("open_form", **data),
         reply_markup=await k_my_form_menu(),
     )
+    if user.field_5:
+        await message.answer_media_group(
+            media=ids_to_media_group(
+                user.field_5, caption=await get_text_message("my_form", **data)
+            )
+        )
+        return
+    await message.answer(text=await get_text_message("my_form", **data))
 
 
 @router.message(GetTextButton("edit_my_form"))
@@ -83,6 +84,10 @@ async def confirm_delete_my_form(
 ) -> None:
     await delete_form(idpk_user=user.idpk)
     await message.answer(
+        text=await get_text_message("delete_my_form_success"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
         text=await get_text_message("new_start", name_=message.from_user.full_name),
         reply_markup=await k_start_menu(),
     )
@@ -94,4 +99,13 @@ async def back_to_main_menu(
 ) -> None:
     await message.answer(
         text=await get_text_message("my_form_menu"), reply_markup=await k_main_menu()
+    )
+
+
+@router.message(GetTextButton("cancel"))
+async def back_to_options(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    await message.answer(
+        text=await get_text_message("my_form_menu"), reply_markup=await k_my_form_menu(),
     )

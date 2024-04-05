@@ -16,3 +16,8 @@ class FormTwoState(StatesGroup):
     field_3 = State()
     field_4 = State()
     field_5 = State()
+
+class ViewForm(StatesGroup):
+    main = State()
+    chose_tag = State()
+    estimate = State()

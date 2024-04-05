@@ -1,3 +1,4 @@
+from sqlalchemy import select, and_
 from db import User
 from init_db import _sessionmaker_for_func
 from tools import get_text_message
@@ -34,3 +35,44 @@ async def delete_form(idpk_user: int) -> None:
         user.form_type = None
         user.photos_id = None
         await session.commit()
+
+
+async def get_idpk_forms_by_tag(tag: str, form_type: str) -> list:
+    async with _sessionmaker_for_func() as session:
+        forms = await session.scalars(
+            select(User.idpk).where(
+                and_(User.field_4 == tag, User.form_type == form_type)
+            )
+        )
+        return forms.all()
+
+
+async def get_idpk_forms(form_type: str) -> list:
+    async with _sessionmaker_for_func() as session:
+        forms = await session.scalars(
+            select(User.idpk).where(User.form_type == form_type)
+        )
+        return forms.all()
+
+
+def split_list_index(list_: list, element: any):
+    """
+    Функция для разделения списка на две части по индексу элемента
+    :param list_: список
+    :param element: элемент списка
+    :return: две части списка, без указанного элемента
+    """
+    if element not in list_:
+        raise ValueError("Элемент не найден в списке")
+    if len(list_) == 1:
+        return [], []
+    index = list_.index(element)
+    first_part = list_[:index]
+    second_part = list_[index + 1 :]
+    return first_part, second_part
+
+
+form_type_inverter = {
+    "one": "two",
+    "two": "one",
+}

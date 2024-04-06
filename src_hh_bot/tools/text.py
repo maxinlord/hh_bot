@@ -31,3 +31,7 @@ async def get_text_button(name: str, **kw) -> str:
                 return bttn_obj.text.format(**kw) if kw else bttn_obj.text
             case 1:
                 return f'[{bttn_obj.name}]\n{bttn_obj.text.format(**kw)}' if kw else f'[{bttn_obj.name}]\n{bttn_obj.text}'
+
+
+def mention_html(id_user: int, name: str) -> str:
+    return f'<a href="tg://user?id={id_user}">{name}</a>'

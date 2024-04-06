@@ -34,7 +34,7 @@ async def k_my_form_menu():
 
 async def k_view_form_menu():
     builder = ReplyKeyboardBuilder()
-    builder.button(text=await get_text_button('estimate'))
+    builder.button(text=await get_text_button('response'))
     builder.button(text=await get_text_button('report'))
     builder.button(text=await get_text_button('next'))
     builder.button(text=await get_text_button('end_viewing_form'))

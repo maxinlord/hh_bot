@@ -1,7 +1,9 @@
 from sqlalchemy import select, and_
-from db import User
+from db import User, SendedMessage
 from init_db import _sessionmaker_for_func
 from tools import get_text_message
+import random
+import string
 
 
 async def form_not_complete(
@@ -37,22 +39,34 @@ async def delete_form(idpk_user: int) -> None:
         await session.commit()
 
 
-async def get_idpk_forms_by_tag(tag: str, form_type: str) -> list:
+async def get_idpk_forms_by_tag(tag: str, form_type: str, last_idpk_form: int) -> list:
     async with _sessionmaker_for_func() as session:
         forms = await session.scalars(
             select(User.idpk).where(
                 and_(User.field_4 == tag, User.form_type == form_type)
             )
         )
-        return forms.all()
+        forms = forms.all()
+        if not last_idpk_form:
+            return forms
+        if not forms:
+            return []
+        forms = split_list_index(forms, last_idpk_form)[1]
+        return forms
 
 
-async def get_idpk_forms(form_type: str) -> list:
+async def get_idpk_forms(form_type: str, last_idpk_form: int) -> list:
     async with _sessionmaker_for_func() as session:
         forms = await session.scalars(
             select(User.idpk).where(User.form_type == form_type)
         )
-        return forms.all()
+        forms = forms.all()
+        if not last_idpk_form:
+            return forms
+        if not forms:
+            return []
+        forms = split_list_index(forms, last_idpk_form)[1]
+        return forms
 
 
 def split_list_index(list_: list, element: any):
@@ -76,3 +90,28 @@ form_type_inverter = {
     "one": "two",
     "two": "one",
 }
+
+
+def gen_id(len_: int) -> str:
+
+    letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
+    id_ = "".join(random.choice(letters) for _ in range(len_))
+    return id_
+
+
+async def save_message(mess: str) -> str:
+    async with _sessionmaker_for_func() as session:
+        id_message = gen_id(10)
+        message = SendedMessage(id_message=id_message, message=mess)
+        session.add(message)
+        await session.commit()
+    return id_message
+
+
+async def delete_message(id_message: str) -> None:
+    async with _sessionmaker_for_func() as session:
+        message = await session.scalar(
+            select(SendedMessage).where(SendedMessage.id_message == id_message)
+        )
+        await session.delete(message)
+        await session.commit()

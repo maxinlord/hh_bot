@@ -7,3 +7,8 @@ class Form(CallbackData, prefix="form"):
 class Tag(CallbackData, prefix='t'):
     type: str = "tag"
     value: str
+
+class Response(CallbackData, prefix='r'):
+    type: str = "response"
+    idpk_form: int
+    id_message: str

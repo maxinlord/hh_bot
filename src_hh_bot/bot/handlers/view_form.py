@@ -16,6 +16,7 @@ from tools import (
     ids_to_list,
     split_list_index,
     form_type_inverter,
+    save_message,
 )
 from bot.states import ViewForm
 from bot.keyboards import (
@@ -29,6 +30,7 @@ from bot.keyboards import (
     k_view_form_menu,
     k_gen_bttn_tags_reply,
     k_back_reply,
+    k_view_response,
 )
 from bot.filters import GetTextButton, FilterByTag
 
@@ -62,21 +64,18 @@ async def cancel_chose_tag(
 async def view_all_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
+    data = await state.get_data()
     idpk_forms: list[int] = await get_idpk_forms(
-        form_type=form_type_inverter[user.form_type]
+        form_type=form_type_inverter[user.form_type],
+        last_idpk_form=data.get("current_idpk", user.last_idpk_form),
     )
     if not idpk_forms:
         await message.answer(
             text=await get_text_message("no_forms"),
         )
         return
-    last_idpk = idpk_forms[-1] if len(idpk_forms) > 1 else idpk_forms[0]
     form: User = await session.get(User, idpk_forms.pop(0))
-    await state.update_data(
-        idpk_forms=idpk_forms,
-        last_idpk=last_idpk,
-        current_idpk=form.idpk,
-    )
+    await state.update_data(idpk_forms=idpk_forms, current_idpk=form.idpk, tag=None)
     await message.answer(
         text=await get_text_message("search_forms"),
         reply_markup=await k_view_form_menu(),
@@ -100,20 +99,21 @@ async def get_tag(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     tag = message.text
+    data = await state.get_data()
     idpk_forms: list[int] = await get_idpk_forms_by_tag(
-        tag=tag, form_type=form_type_inverter[user.form_type]
+        tag=tag,
+        form_type=form_type_inverter[user.form_type],
+        last_idpk_form=data.get("current_idpk", user.last_idpk_form),
     )
     if not idpk_forms:
         await message.answer(
             text=await get_text_message("no_forms_with_tag", tag=tag),
         )
         return
-    last_idpk = idpk_forms[-1] if len(idpk_forms) > 1 else idpk_forms[0]
     form: User = await session.get(User, idpk_forms.pop(0))
     await state.update_data(
         idpk_forms=idpk_forms,
         tag=tag,
-        last_idpk=last_idpk,
         current_idpk=form.idpk,
     )
     await message.answer(
@@ -141,17 +141,19 @@ async def next_form(
     data = await state.get_data()
     idpk_forms: list[int] = data["idpk_forms"]
     if not idpk_forms:
-        if has_tag := data.get("tag"):
+        if data["tag"]:
             idpk_forms_updated = await get_idpk_forms_by_tag(
-                tag=data["tag"], form_type=form_type_inverter[user.form_type]
+                tag=data["tag"],
+                form_type=form_type_inverter[user.form_type],
+                last_idpk_form=data["current_idpk"],
             )
         else:
             idpk_forms_updated = await get_idpk_forms(
-                form_type=form_type_inverter[user.form_type]
+                form_type=form_type_inverter[user.form_type],
+                last_idpk_form=data["current_idpk"],
             )
-        idpk_forms_updated = split_list_index(idpk_forms_updated, data["last_idpk"])[1]
         if not idpk_forms_updated:
-            if has_tag:
+            if data["tag"]:
                 await message.answer(
                     text=await get_text_message("forms_with_tag_the_end"),
                 )
@@ -162,11 +164,9 @@ async def next_form(
             return
         idpk_forms.extend(idpk_forms_updated)
 
-    last_idpk = idpk_forms[-1] if len(idpk_forms) > 1 else idpk_forms[0]
     form: User = await session.get(User, idpk_forms.pop(0))
     await state.update_data(
         idpk_forms=idpk_forms,
-        last_idpk=last_idpk,
         current_idpk=form.idpk,
     )
     await message.answer_media_group(
@@ -191,6 +191,9 @@ async def end_viewing_form(
         text=await get_text_message("main_menu"),
         reply_markup=await k_main_menu(),
     )
+    data = await state.get_data()
+    user.last_idpk_form = data["current_idpk"]
+    await session.commit()
     await state.clear()
 
 
@@ -200,17 +203,24 @@ async def report(
 ) -> None: ...
 
 
-@router.message(ViewForm.main, GetTextButton("estimate"))
-async def estimate(
+@router.message(ViewForm.main, GetTextButton("response"))
+async def response(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
+    data = await state.get_data()
+    if data["current_idpk"] in data.get("responses", []):
+        await message.answer(
+            text=await get_text_message("already_response"),
+        )
+        return
     await message.answer(
         text=await get_text_message("send_me_message"),
         reply_markup=await k_back_reply(),
     )
-    await state.set_state(ViewForm.estimate)
+    await state.set_state(ViewForm.response)
 
-@router.message(ViewForm.estimate, GetTextButton("back"))
+
+@router.message(ViewForm.response, GetTextButton("back"))
 async def back_to_viewing_menu(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
@@ -220,18 +230,30 @@ async def back_to_viewing_menu(
     )
     await state.set_state(ViewForm.main)
 
-@router.message(ViewForm.estimate)
-async def get_mess_estimate(
+
+@router.message(ViewForm.response)
+async def get_mess_response(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
+    MAX_SIZE_MESSAGE = 4096
+    if len(message.text) > MAX_SIZE_MESSAGE:
+        await message.answer(
+            text=await get_text_message("mess_too_long"),
+        )
+        return
     await message.answer(
-        text=await get_text_message("your_mess_send"),
+        text=await get_text_message("your_respond_send"),
         reply_markup=await k_view_form_menu(),
     )
     data = await state.get_data()
+    responses: list = data.get("responses", [])
+    responses.append(data["current_idpk"])
+    await state.update_data(responses=responses)
     form = await session.get(User, data["current_idpk"])
+    id_message = await save_message(message.text)
     await message.bot.send_message(
         chat_id=form.id_user,
-        text=message.text,
+        text=await get_text_message("you_have_response"),
+        reply_markup=await k_view_response(id_message=id_message, idpk_form=user.idpk),
     )
     await state.set_state(ViewForm.main)

@@ -1,4 +1,4 @@
-from .text import get_text_message, get_text_button
+from .text import get_text_message, get_text_button, mention_html
 from .photo import ids_to_media_group, ids_to_list
 from .tags import get_tags, get_num_column_for_tags
 from .form import (
@@ -8,4 +8,6 @@ from .form import (
     split_list_index,
     form_type_inverter,
     get_idpk_forms,
+    save_message,
+    delete_message
 )

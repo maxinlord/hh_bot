@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
 from tools import get_text_message
 from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
-
+from aiogram.filters import StateFilter
+from aiogram.fsm.state import default_state
 
 router = Router()
 
 
-@router.message(CommandStart())
+@router.message(CommandStart(), StateFilter(default_state))
 async def command_start(
     message: Message,
     state: FSMContext,
@@ -24,7 +25,8 @@ async def command_start(
     if not user:
         user = User(
             id_user=message.from_user.id,
-            username=message.from_user.username,
+            username=message.from_user.username
+            or await get_text_message("username_is_missing"),
             name=message.from_user.full_name,
             date_reg=datetime.now(),
         )

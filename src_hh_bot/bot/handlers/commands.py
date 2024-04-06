@@ -1,5 +1,5 @@
 from datetime import datetime
-from aiogram.filters import CommandStart, CommandObject
+from aiogram.filters import CommandStart, CommandObject, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -13,7 +13,7 @@ from aiogram.fsm.state import default_state
 router = Router()
 
 
-@router.message(CommandObject(command='reset'))
+@router.message(Command(commands='reset'))
 async def command_start(
     message: Message,
     state: FSMContext,

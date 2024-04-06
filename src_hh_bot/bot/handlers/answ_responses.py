@@ -95,7 +95,8 @@ async def response_accept(
         chat_id=form.id_user,
         text=await get_text_message(
             "response_accept",
-            named_link=query.message.from_user.mention_html(
+            named_link=mention_html(
+                id_user=query.from_user.id,
                 name=await get_text_message("name_link_in_response")
             ),
         ),

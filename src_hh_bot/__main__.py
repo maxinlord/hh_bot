@@ -41,6 +41,9 @@ async def set_default_commands(bot: Bot):
             BotCommand(
                 command="start", description=await get_text_button("command_start")
             ),
+            BotCommand(
+                command="reset", description='сброс'
+            ),
         ]
     )
 

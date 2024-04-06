@@ -13,7 +13,7 @@ from aiogram.fsm.state import default_state
 router = Router()
 
 
-@router.message(CommandObject(command='/reset'))
+@router.message(CommandObject(command='reset'))
 async def command_start(
     message: Message,
     state: FSMContext,

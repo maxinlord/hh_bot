@@ -56,17 +56,27 @@ async def send_form_by_response(
     )
     await delete_message(callback_data.id_message)
     await query.message.edit_reply_markup(reply_markup=None)
-    await query.message.answer_media_group(
-        media=ids_to_media_group(
-            string_ids=form.field_5,
-            caption=await get_text_message(
+    if form.field_5:
+        await query.message.answer_media_group(
+            media=ids_to_media_group(
+                string_ids=form.field_5,
+                caption=await get_text_message(
+                    "viewing_form",
+                    field_1=form.field_1,
+                    field_2=form.field_2,
+                    field_3=form.field_3,
+                ),
+            )
+        )
+    else:
+        await query.message.answer(
+            text=await get_text_message(
                 "viewing_form",
                 field_1=form.field_1,
                 field_2=form.field_2,
                 field_3=form.field_3,
             ),
         )
-    )
     await query.message.answer(
         text=mess_response,
         reply_markup=await k_accept_or_reject(callback_data.idpk_form),
@@ -109,4 +119,6 @@ async def response_reject(
     session: AsyncSession,
     user: User,
 ) -> None:
-    await query.message.edit_text(text=await get_text_message("response_reject_message"))
+    await query.message.edit_text(
+        text=await get_text_message("response_reject_message")
+    )

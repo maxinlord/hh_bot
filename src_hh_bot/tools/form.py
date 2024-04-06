@@ -4,6 +4,7 @@ from init_db import _sessionmaker_for_func
 from tools import get_text_message
 import random
 import string
+import json
 
 
 async def form_not_complete(
@@ -39,7 +40,7 @@ async def delete_form(idpk_user: int) -> None:
         await session.commit()
 
 
-async def get_idpk_forms_by_tag(tag: str, form_type: str, last_idpk_form: int) -> list:
+async def get_idpk_forms_by_tag(tag: str, form_type: str, last_idpk_form: int | str) -> list:
     async with _sessionmaker_for_func() as session:
         forms = await session.scalars(
             select(User.idpk).where(
@@ -51,11 +52,16 @@ async def get_idpk_forms_by_tag(tag: str, form_type: str, last_idpk_form: int) -
             return forms
         if not forms:
             return []
-        forms = split_list_index(forms, last_idpk_form)[1]
+        match isinstance(last_idpk_form, int):
+            case True:
+                forms = split_list_index(forms, last_idpk_form)[1]
+            case False:
+                last_idpk_form: dict = json.loads(last_idpk_form)
+                forms = split_list_index(forms, last_idpk_form.get(tag, 0))[1]
         return forms
 
 
-async def get_idpk_forms(form_type: str, last_idpk_form: int) -> list:
+async def get_idpk_forms(form_type: str, last_idpk_form: int | str) -> list:
     async with _sessionmaker_for_func() as session:
         forms = await session.scalars(
             select(User.idpk).where(User.form_type == form_type)
@@ -65,7 +71,12 @@ async def get_idpk_forms(form_type: str, last_idpk_form: int) -> list:
             return forms
         if not forms:
             return []
-        forms = split_list_index(forms, last_idpk_form)[1]
+        match isinstance(last_idpk_form, int):
+            case True:
+                forms = split_list_index(forms, last_idpk_form)[1]
+            case False:
+                last_idpk_form: dict = json.loads(last_idpk_form)
+                forms = split_list_index(forms, last_idpk_form.get('__all', 0))[1]
         return forms
 
 
@@ -76,6 +87,8 @@ def split_list_index(list_: list, element: any):
     :param element: элемент списка
     :return: две части списка, без указанного элемента
     """
+    if element == 0:
+        return [], list_
     if element > list_[-1]:
         return [], []
     if element not in list_:

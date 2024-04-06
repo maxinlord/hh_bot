@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     ForeignKey,
+    JSON
 )
 from .base import Base
 
@@ -23,7 +24,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(length=64), nullable=True)
     name: Mapped[str] = mapped_column(String(length=64))
     date_reg: Mapped[str] = mapped_column(DateTime)
-    last_idpk_form: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    last_idpk_form: Mapped[str] = mapped_column(Text, nullable=True)
     form_type: Mapped[str] = mapped_column(String(length=64), nullable=True)
     field_1: Mapped[str] = mapped_column(Text(4096), nullable=True)
     field_2: Mapped[str] = mapped_column(Text(4096), nullable=True)

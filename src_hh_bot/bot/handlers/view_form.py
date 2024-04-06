@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User, Value
+import json
 from tools import (
     get_text_message,
     form_not_complete,
@@ -80,18 +81,27 @@ async def view_all_form(
         text=await get_text_message("search_forms"),
         reply_markup=await k_view_form_menu(),
     )
-    await message.answer_media_group(
-        media=ids_to_media_group(
-            string_ids=form.field_5,
-            caption=await get_text_message(
-                "viewing_form",
-                field_1=form.field_1,
-                field_2=form.field_2,
-                field_3=form.field_3,
+    await state.set_state(ViewForm.main)
+    if form.field_5:
+        await message.answer_media_group(
+            media=ids_to_media_group(
+                string_ids=form.field_5,
+                caption=await get_text_message(
+                    "viewing_form",
+                    field_1=form.field_1,
+                    field_2=form.field_2,
+                    field_3=form.field_3,
+                ),
             ),
+        )
+    await message.answer(
+        text=await get_text_message(
+            "viewing_form",
+            field_1=form.field_1,
+            field_2=form.field_2,
+            field_3=form.field_3,
         ),
     )
-    await state.set_state(ViewForm.main)
 
 
 @router.message(ViewForm.chose_tag, FilterByTag())
@@ -120,18 +130,27 @@ async def get_tag(
         text=await get_text_message("search_forms"),
         reply_markup=await k_view_form_menu(),
     )
-    await message.answer_media_group(
-        media=ids_to_media_group(
-            string_ids=form.field_5,
-            caption=await get_text_message(
-                "viewing_form",
-                field_1=form.field_1,
-                field_2=form.field_2,
-                field_3=form.field_3,
+    await state.set_state(ViewForm.main)
+    if form.field_5:
+        await message.answer_media_group(
+            media=ids_to_media_group(
+                string_ids=form.field_5,
+                caption=await get_text_message(
+                    "viewing_form",
+                    field_1=form.field_1,
+                    field_2=form.field_2,
+                    field_3=form.field_3,
+                ),
             ),
+        )
+    await message.answer(
+        text=await get_text_message(
+            "viewing_form",
+            field_1=form.field_1,
+            field_2=form.field_2,
+            field_3=form.field_3,
         ),
     )
-    await state.set_state(ViewForm.main)
 
 
 @router.message(ViewForm.main, GetTextButton("next"))
@@ -169,18 +188,27 @@ async def next_form(
         idpk_forms=idpk_forms,
         current_idpk=form.idpk,
     )
-    await message.answer_media_group(
-        media=ids_to_media_group(
-            string_ids=form.field_5,
-            caption=await get_text_message(
-                "viewing_form",
-                field_1=form.field_1,
-                field_2=form.field_2,
-                field_3=form.field_3,
+    await state.set_state(ViewForm.main)
+    if form.field_5:
+        await message.answer_media_group(
+            media=ids_to_media_group(
+                string_ids=form.field_5,
+                caption=await get_text_message(
+                    "viewing_form",
+                    field_1=form.field_1,
+                    field_2=form.field_2,
+                    field_3=form.field_3,
+                ),
             ),
+        )
+    await message.answer(
+        text=await get_text_message(
+            "viewing_form",
+            field_1=form.field_1,
+            field_2=form.field_2,
+            field_3=form.field_3,
         ),
     )
-    await state.set_state(ViewForm.main)
 
 
 @router.message(ViewForm.main, GetTextButton("end_viewing_form"))
@@ -192,7 +220,13 @@ async def end_viewing_form(
         reply_markup=await k_main_menu(),
     )
     data = await state.get_data()
-    user.last_idpk_form = data["current_idpk"]
+    decoded_dict = json.loads(user.last_idpk_form or "{}")
+    key = data["tag"] or "__all"
+    if decoded_dict:
+        decoded_dict[key] = data["current_idpk"]
+    else:
+        decoded_dict = {key: data["current_idpk"]}
+    user.last_idpk_form = json.dumps(decoded_dict)
     await session.commit()
     await state.clear()
 

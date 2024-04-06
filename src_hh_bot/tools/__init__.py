@@ -9,5 +9,5 @@ from .form import (
     form_type_inverter,
     get_idpk_forms,
     save_message,
-    delete_message
+    delete_message,
 )

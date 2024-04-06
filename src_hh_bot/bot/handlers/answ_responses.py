@@ -92,7 +92,7 @@ async def response_accept(
 ) -> None:
     form = await session.get(User, query.data.split(":")[1])
     await query.bot.send_message(
-        chat_id=form.id_user,
+        chat_id=user.id_user,
         text=await get_text_message(
             "response_accept",
             named_link=query.message.from_user.mention_html(

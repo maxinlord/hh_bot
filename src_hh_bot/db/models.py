@@ -10,7 +10,7 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     ForeignKey,
-    JSON
+    JSON,
 )
 from .base import Base
 
@@ -31,6 +31,15 @@ class User(Base):
     field_3: Mapped[str] = mapped_column(Text(4096), nullable=True)
     field_4: Mapped[str] = mapped_column(Text(4096), nullable=True)
     field_5: Mapped[str] = mapped_column(Text(4096), nullable=True)
+
+
+class Subscriptions(Base):
+    __tablename__ = "subscriptions"
+
+    id_user: Mapped[int] = mapped_column(BigInteger)
+    plan: Mapped[str] = mapped_column(String(length=64))
+    date_start: Mapped[str] = mapped_column(DateTime, nullable=True)
+    date_end: Mapped[str] = mapped_column(DateTime, nullable=True)
 
 
 class Text(Base):
@@ -55,7 +64,6 @@ class BlackList(Base):
     __tablename__ = "blacklist"
 
     id_user: Mapped[int] = mapped_column(BigInteger)  # Идентификатор пользователя
-    date_unban: Mapped[str] = mapped_column(DateTime)  # Дата разбана
 
 
 class Value(Base):

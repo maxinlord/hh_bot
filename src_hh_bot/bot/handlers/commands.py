@@ -8,13 +8,13 @@ from db import User
 from tools import get_text_message
 from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
 from aiogram.filters import StateFilter
-from aiogram.fsm.state import default_state
+from aiogram.fsm.state import any_state
 
 router = Router()
 
 
-@router.message(Command(commands='reset'))
-async def command_start(
+@router.message(Command(commands='reset'), StateFilter(any_state))
+async def command_reset(
     message: Message,
     state: FSMContext,
     command: CommandObject,

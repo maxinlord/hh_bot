@@ -12,3 +12,7 @@ class Response(CallbackData, prefix='r'):
     type: str = "response"
     idpk_form: int
     id_message: str
+
+class Ban(CallbackData, prefix='b'):
+    type: str = "ban"
+    idpk_user: int

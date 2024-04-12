@@ -34,7 +34,7 @@ async def menu_form_one(
     data["field_3"] = no_set
     data["field_4"] = no_set
     data["field_5"] = no_set
-    data["photos_id"] = list()
+    data["photos_id"] = []
     await state.update_data(data)
     await query.message.edit_text(
         text=await get_text_message("form_one", **data),
@@ -116,7 +116,6 @@ async def get_form_one_field_3(
     data = await state.update_data(field_3=url)
     await message.answer(
         text=await get_text_message("form_one", **data),
-        disable_web_page_preview=True,
         reply_markup=await k_form_fields(),
     )
     await state.set_state(FormOneState.main)
@@ -217,7 +216,7 @@ async def form_one_skip_photo(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     text = await get_text_message("field_5_skip_photo")
-    data = await state.update_data(field_5=text, photos_id=list())
+    data = await state.update_data(field_5=text, photos_id=[])
     await message.answer(
         text=await get_text_message("photo_was_skipped"),
         reply_markup=ReplyKeyboardRemove(),
@@ -233,7 +232,7 @@ async def form_one_skip_photo(
 async def form_one_clear_selected(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await state.update_data(field_5=0, photos_id=list())
+    await state.update_data(field_5=0, photos_id=[])
     await message.answer(text=await get_text_message("cleaned_up"))
 
 

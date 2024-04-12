@@ -1,41 +1,30 @@
-from pprint import pprint
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
-from aiogram.utils.media_group import MediaGroupBuilder
-from aiogram.enums import MessageEntityType
-from aiogram import F, Router
+from aiogram.types import Message
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Value
+from db import User
 import json
 from tools import (
     get_text_message,
-    form_not_complete,
     get_idpk_forms_by_tag,
     get_idpk_forms,
     ids_to_media_group,
-    ids_to_list,
-    split_list_index,
     form_type_inverter,
     save_message,
+    get_id_admin,
 )
 from bot.states import ViewForm
 from bot.keyboards import (
-    Form,
-    Tag,
-    k_form_fields,
-    k_options_for_photo,
-    k_gen_bttn_tags_inline,
     k_main_menu,
-    k_back,
     k_view_form_menu,
     k_gen_bttn_tags_reply,
     k_back_reply,
     k_view_response,
+    k_ban,
 )
 from bot.filters import GetTextButton, FilterByTag
 
-
+MAX_SIZE_MESSAGE = 4096
 router = Router()
 
 
@@ -234,7 +223,61 @@ async def end_viewing_form(
 @router.message(ViewForm.main, GetTextButton("report"))
 async def report(
     message: Message, state: FSMContext, session: AsyncSession, user: User
-) -> None: ...
+) -> None:
+    data = await state.get_data()
+    if data["current_idpk"] in data.get("reports", []):
+        await message.answer(
+            text=await get_text_message("already_reported"),
+        )
+        return
+    await message.answer(
+        text=await get_text_message("send_me_reason_report"),
+        reply_markup=await k_back_reply(),
+    )
+    await state.set_state(ViewForm.report)
+
+
+@router.message(ViewForm.report, GetTextButton("back"))
+async def back_to_viewing_menu(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    await message.answer(
+        text=await get_text_message("backed"),
+        reply_markup=await k_view_form_menu(),
+    )
+    await state.set_state(ViewForm.main)
+
+
+@router.message(ViewForm.report)
+async def get_reason_report(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    if len(message.text) > MAX_SIZE_MESSAGE:
+        await message.answer(
+            text=await get_text_message("mess_report_too_long"),
+        )
+        return
+    await message.answer(
+        text=await get_text_message("your_reason_send"),
+        reply_markup=await k_view_form_menu(),
+    )
+    data = await state.get_data()
+    reports: list = data.get("reports", [])
+    reports.append(data["current_idpk"])
+    await state.update_data(reports=reports)
+    form = await session.get(User, data["current_idpk"])
+    await state.set_state(ViewForm.main)
+    await message.bot.send_message(
+        chat_id=await get_id_admin(),
+        text=await get_text_message(
+            "report_form",
+            field_1=form.field_1,
+            field_2=form.field_2,
+            field_3=form.field_3,
+            reason=message.text,
+        ),
+        reply_markup=await k_ban(form.idpk),
+    )
 
 
 @router.message(ViewForm.main, GetTextButton("response"))
@@ -269,7 +312,6 @@ async def back_to_viewing_menu(
 async def get_mess_response(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    MAX_SIZE_MESSAGE = 4096
     if len(message.text) > MAX_SIZE_MESSAGE:
         await message.answer(
             text=await get_text_message("mess_too_long"),

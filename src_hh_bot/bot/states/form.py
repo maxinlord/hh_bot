@@ -21,3 +21,4 @@ class ViewForm(StatesGroup):
     main = State()
     chose_tag = State()
     response = State()
+    report = State()

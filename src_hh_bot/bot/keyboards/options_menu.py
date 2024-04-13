@@ -50,3 +50,10 @@ async def k_ban(idpk_user: int):
     )
     builder.adjust(1)
     return builder.as_markup()
+
+
+async def k_subscribe():
+    builder = InlineKeyboardBuilder()
+    builder.button(text=await get_text_button("subscribe"), callback_data="sub")
+    builder.adjust(1)
+    return builder.as_markup()

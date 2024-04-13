@@ -6,7 +6,8 @@ from aiogram.types import Message, CallbackQuery
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db import User, Subscriptions
+from db import Value, Subscriptions
+from bot.keyboards import k_subscribe
 
 
 class CheckSubscription(BaseMiddleware):
@@ -18,17 +19,30 @@ class CheckSubscription(BaseMiddleware):
         data: dict[str, Any],
     ) -> Any:
         session: AsyncSession = data["session"]
-        if await session.scalar(
-            select(Subscriptions).where(Subscriptions.id_user == event.from_user.id)
+        if not await session.scalar(
+            select(Value.value_int).where(Value.name == "subscribe_mode")
+        ):
+            return await handler(event, data)
+        if datetime.now() < (
+            await session.scalar(
+                select(Subscriptions.date_end).where(
+                    Subscriptions.id_user == event.from_user.id
+                )
+            )
         ):
             return await handler(event, data)
 
         if isinstance(event, Message):
+            if event.successful_payment:
+                return await handler(event, data)
             await event.answer(
-                text=await get_text_message("no_subscription"), reply_markup=None
+                text=await get_text_message("no_subscription"),
+                reply_markup=await k_subscribe(),
             )
         elif isinstance(event, CallbackQuery):
-            await event.message.edit_reply_markup(reply_markup=None)
+            if event.data == "sub":
+                return await handler(event, data)
             await event.message.answer(
-                text=await get_text_message("no_subscription"), reply_markup=None
+                text=await get_text_message("no_subscription"),
+                reply_markup=await k_subscribe(),
             )

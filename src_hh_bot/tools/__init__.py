@@ -12,3 +12,4 @@ from .form import (
     delete_message,
 )
 from .admin import get_id_admin
+from .pay import end_life_invoice

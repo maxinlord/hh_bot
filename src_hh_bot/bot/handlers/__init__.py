@@ -12,7 +12,8 @@ def setup_message_routers() -> Router:
         view_form,
         answ_responses,
         commands,
-        admin
+        admin,
+        subscribe,
     )
 
     router = Router()
@@ -24,6 +25,7 @@ def setup_message_routers() -> Router:
     router.include_router(answ_responses.router)
     router.include_router(commands.router)
     router.include_router(admin.router)
+    router.include_router(subscribe.router)
     router.include_router(any_unknown_message.router)
     # router.include_router(errors.router)
 

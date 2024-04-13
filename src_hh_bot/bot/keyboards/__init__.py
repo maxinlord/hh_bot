@@ -8,6 +8,7 @@ from .options_menu import (
     k_confirm_del_form,
     k_view_response,
     k_accept_or_reject,
-    k_ban
+    k_ban,
+    k_subscribe
 )
 from .tags import k_gen_bttn_tags_inline, k_gen_bttn_tags_reply

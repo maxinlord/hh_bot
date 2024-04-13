@@ -2,7 +2,6 @@ import asyncio
 import aioschedule
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 from aiogram.fsm.storage.redis import RedisStorage

@@ -23,17 +23,16 @@ class CheckSubscription(BaseMiddleware):
             select(Value.value_int).where(Value.name == "subscribe_mode")
         ):
             return await handler(event, data)
-        if datetime.now() < (
-            await session.scalar(
-                select(Subscriptions.date_end).where(
-                    Subscriptions.id_user == event.from_user.id
-                )
-            )
-        ):
+        sub = await session.scalar(
+            select(Subscriptions).where(Subscriptions.id_user == event.from_user.id)
+        )
+        if sub and datetime.now() < sub.date_end:
             return await handler(event, data)
 
         if isinstance(event, Message):
             if event.successful_payment:
+                return await handler(event, data)
+            if data.get("command") and data.get("command").args:
                 return await handler(event, data)
             await event.answer(
                 text=await get_text_message("no_subscription"),

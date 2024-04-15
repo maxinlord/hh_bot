@@ -1,11 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from tools import get_text_message
+from db import User, PromoCode
+from tools import get_text_message, subscription_price
 from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import default_state
@@ -13,11 +14,49 @@ from aiogram.fsm.state import default_state
 router = Router()
 
 
+
+
+@router.message(CommandStart(deep_link=True))
+async def handler(
+    message: Message,
+    command: CommandObject,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User | None,
+):
+    if not user:
+        return await message.answer(
+            text=await get_text_message("deep_link_user_not_registered")
+        )
+    promocode = await session.scalar(
+        select(PromoCode).where(PromoCode.code == command.args)
+    )
+    if not promocode:
+        return await message.answer(
+            text=await get_text_message("deep_link_promocode_not_found")
+        )
+    if (
+        promocode.num_enable_triggers > 0
+        and promocode.num_enable_triggers == promocode.num_activated
+    ):
+        return await message.answer(
+            text=await get_text_message("deep_link_promocode_end")
+        )
+    sub = {
+        "plan": f"promocode_{promocode.code}",
+        "id_user": user.id_user,
+        'days_sub':promocode.days_sub,
+    }
+    promocode.num_activated += 1
+    await session.commit()
+    await state.update_data(promocode_sub=sub)
+    await subscription_price(message=message, discount=promocode.discount, session=session)
+
+
 @router.message(CommandStart(), StateFilter(default_state))
 async def command_start(
     message: Message,
     state: FSMContext,
-    command: CommandObject,
     session: AsyncSession,
     user: User | None,
 ) -> None:

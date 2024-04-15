@@ -11,6 +11,10 @@ import config
 
 router = Router()
 
+DAYS_IN_YEAR = 365
+YEARS = 10
+ALL_DAYS = DAYS_IN_YEAR * YEARS
+
 
 @router.callback_query(F.data == "sub")
 async def subscribe(
@@ -51,13 +55,20 @@ async def answ_on_buy(pre_checkout_query: PreCheckoutQuery, bot: Bot):
 
 @router.message(F.successful_payment)
 async def process_successful_payment(
-    message: Message, user: User, session: AsyncSession
+    message: Message, user: User, session: AsyncSession, state: FSMContext
 ):
     message_id, _ = message.successful_payment.invoice_payload.split(":")
     with contextlib.suppress(Exception):
-        await message.bot.delete_message(
-            chat_id=message.chat.id, message_id=message_id
-        )
+        await message.bot.delete_message(chat_id=message.chat.id, message_id=message_id)
+    data = await state.get_data()
+    if sub := data.get("promocode_sub"):
+        days = sub["days_sub"] if sub["days_sub"] > 0 else ALL_DAYS
+        del sub["days_sub"]
+        date_end = datetime.now() + timedelta(days=days)
+        session.add(Subscriptions(**sub, date_end=date_end, date_start=datetime.now()))
+        await session.commit()
+        await message.answer(text=await get_text_message("successful_payment"))
+        return
     subscription_period = await session.scalar(
         select(Value.value_int).where(Value.name == "subscription_period")
     )
@@ -79,5 +90,6 @@ async def process_successful_payment(
                 date_end=date_end,
             )
         )
+    await state.clear()
     await session.commit()
     await message.answer(text=await get_text_message("successful_payment"))

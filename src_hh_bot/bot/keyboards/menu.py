@@ -40,3 +40,13 @@ async def k_view_form_menu():
     builder.button(text=await get_text_button('end_viewing_form'))
     builder.adjust(3, 1)
     return builder.as_markup(resize_keyboard=True)
+
+
+async def k_promocode_menu():
+    builder = InlineKeyboardBuilder()
+    builder.button(text=await get_text_button("discount"), callback_data="discount")
+    builder.button(text=await get_text_button("days_sub"), callback_data="days_sub")
+    builder.button(text=await get_text_button("num_enable_triggers"), callback_data="num_enable_triggers")
+    builder.button(text=await get_text_button("gen_link"), callback_data="gen_link")
+    builder.adjust(1)
+    return builder.as_markup()

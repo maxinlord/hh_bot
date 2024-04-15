@@ -81,3 +81,13 @@ class SendedMessage(Base):
 
     id_message: Mapped[str] = mapped_column(String(length=64), unique=True)
     message: Mapped[str] = mapped_column(String(length=4096))
+
+
+class PromoCode(Base):
+    __tablename__ = "promo_codes"
+
+    code: Mapped[str] = mapped_column(String(length=64), unique=True)
+    discount: Mapped[int] = mapped_column(nullable=True)
+    days_sub: Mapped[int] = mapped_column(nullable=True)
+    num_enable_triggers: Mapped[int] = mapped_column(default=1)
+    num_activated: Mapped[int] = mapped_column(default=0)

@@ -12,6 +12,7 @@ from tools import (
     form_type_inverter,
     save_message,
     get_id_admin,
+    mention_html
 )
 from bot.states import ViewForm
 from bot.keyboards import (
@@ -275,6 +276,10 @@ async def get_reason_report(
             field_2=form.field_2,
             field_3=form.field_3,
             reason=message.text,
+            link_on_user=mention_html(
+                form.id_user,
+                form.name,
+            )
         ),
         reply_markup=await k_ban(form.idpk),
     )

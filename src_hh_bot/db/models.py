@@ -87,7 +87,7 @@ class PromoCode(Base):
     __tablename__ = "promo_codes"
 
     code: Mapped[str] = mapped_column(String(length=64), unique=True)
-    discount: Mapped[int] = mapped_column(nullable=True)
-    days_sub: Mapped[int] = mapped_column(nullable=True)
+    discount: Mapped[int] = mapped_column(default=0)
+    days_sub: Mapped[int] = mapped_column(default=0)
     num_enable_triggers: Mapped[int] = mapped_column(default=1)
     num_activated: Mapped[int] = mapped_column(default=0)

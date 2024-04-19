@@ -61,11 +61,23 @@ async def process_successful_payment(
     with contextlib.suppress(Exception):
         await message.bot.delete_message(chat_id=message.chat.id, message_id=message_id)
     data = await state.get_data()
-    if sub := data.get("promocode_sub"):
-        days = sub["days_sub"] if sub["days_sub"] > 0 else ALL_DAYS
-        del sub["days_sub"]
+    if sub_data := data.get("promocode_sub"):
+        days = sub_data["days_sub"] if sub_data["days_sub"] > 0 else ALL_DAYS
         date_end = datetime.now() + timedelta(days=days)
-        session.add(Subscriptions(**sub, date_end=date_end, date_start=datetime.now()))
+        if sub := await session.scalar(
+            select(Subscriptions).where(Subscriptions.id_user == user.id_user)
+        ):
+            sub.plan = sub_data["plan"]
+            sub.date_end += timedelta(days=days)
+        else:
+            session.add(
+                Subscriptions(
+                    id_user=user.id_user,
+                    plan=data["plan"],
+                    date_end=date_end,
+                    date_start=datetime.now(),
+                )
+            )
         await session.commit()
         await message.answer(text=await get_text_message("successful_payment"))
         return

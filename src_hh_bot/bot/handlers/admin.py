@@ -14,6 +14,7 @@ from tools import (
     mention_html,
     get_id_admin,
     gen_id_promocode,
+    filter_by_keys,
 )
 from bot.states import Admin
 from bot.keyboards import (
@@ -199,9 +200,21 @@ async def gen_link(
     user: User,
 ) -> None:
     data = await state.get_data()
-    del data['additional_text']
     data["code"] = gen_id_promocode(len_=12)
-    session.add(PromoCode(**data))
+    session.add(
+        PromoCode(
+            **filter_by_keys(
+                d=data,
+                keys=[
+                    "code",
+                    "discount",
+                    "days_sub",
+                    "num_enable_triggers",
+                    "num_activated",
+                ],
+            )
+        )
+    )
     await session.commit()
     link_promocode = await create_start_link(query.bot, data["code"])
     await query.message.delete_reply_markup()

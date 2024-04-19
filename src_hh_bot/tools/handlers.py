@@ -14,7 +14,8 @@ async def subscription_price(message: Message, session: AsyncSession, discount: 
     price = await session.scalar(
         select(Value.value_int).where(Value.name == "subscription_price")
     )
-    price = int(price * (discount / 100)) if discount > 0 else price
+    price = int(price * ((100 - discount) / 100)) if discount > 0 else price
+    price = max(price, 80)
     end_life_invoice_ = await end_life_invoice()
     await message.answer_invoice(
         title=await get_text_message("title_invoice"),

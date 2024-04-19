@@ -5,15 +5,13 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, PromoCode
+from db import User, PromoCode, Subscriptions
 from tools import get_text_message, subscription_price
 from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import default_state
 
 router = Router()
-
-
 
 
 @router.message(CommandStart(deep_link=True))
@@ -35,6 +33,12 @@ async def handler(
         return await message.answer(
             text=await get_text_message("deep_link_promocode_not_found")
         )
+    data = await state.get_data()
+    pressed_promocodes: list = data.get("pressed_promocodes", [])
+    if promocode.code in pressed_promocodes:
+        await message.answer(text=await get_text_message("deep_link_promocode_pressed"))
+        return
+    pressed_promocodes.append(promocode.code)
     if (
         promocode.num_enable_triggers > 0
         and promocode.num_enable_triggers == promocode.num_activated
@@ -42,15 +46,40 @@ async def handler(
         return await message.answer(
             text=await get_text_message("deep_link_promocode_end")
         )
-    sub = {
+    sub_data = {
         "plan": f"promocode_{promocode.code}",
-        "id_user": user.id_user,
-        'days_sub':promocode.days_sub,
+        "days_sub": promocode.days_sub,
     }
     promocode.num_activated += 1
+    await state.update_data(
+        promocode_sub=sub_data, pressed_promocodes=pressed_promocodes
+    )
+    if promocode.discount == 100:
+        days = promocode.days_sub if promocode.days_sub > 0 else 365 * 10
+        date_end = datetime.now() + timedelta(days=days)
+        if sub := await session.scalar(
+            select(Subscriptions).where(Subscriptions.id_user == user.id_user)
+        ):
+            sub.plan = sub_data["plan"]
+            sub.date_end += timedelta(days=days)
+        else:
+            session.add(
+                Subscriptions(
+                    id_user=user.id_user,
+                    plan=sub_data["plan"],
+                    date_end=date_end,
+                    date_start=datetime.now(),
+                )
+            )
+        await session.commit()
+        return await message.answer(
+            text=await get_text_message("deep_link_promocode_free_pay")
+        )
+
     await session.commit()
-    await state.update_data(promocode_sub=sub)
-    await subscription_price(message=message, discount=promocode.discount, session=session)
+    await subscription_price(
+        message=message, discount=promocode.discount, session=session
+    )
 
 
 @router.message(CommandStart(), StateFilter(default_state))

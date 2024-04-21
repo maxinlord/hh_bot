@@ -22,10 +22,20 @@ async def handler(
     state: FSMContext,
     user: User | None,
 ):
+    new_user = False
+    # проверяем есть ли пользователь в базе данных
     if not user:
-        return await message.answer(
-            text=await get_text_message("deep_link_user_not_registered")
+        user = User(
+            id_user=message.from_user.id,
+            username=message.from_user.username
+            or await get_text_message("username_is_missing"),
+            name=message.from_user.full_name,
+            date_reg=datetime.now(),
         )
+        session.add(user)
+        new_user = True
+
+    # проверяем есть ли такой промокод в базе данных
     promocode = await session.scalar(
         select(PromoCode).where(PromoCode.code == command.args)
     )
@@ -33,12 +43,22 @@ async def handler(
         return await message.answer(
             text=await get_text_message("deep_link_promocode_not_found")
         )
+
+    # проверяем есть ли такой промокод в списке активированных промокодов
+    # или есть ли такая подписка с таким промокодом
     data = await state.get_data()
+    activated_promocode = await session.scalar(
+        select(Subscriptions.plan).where(
+            Subscriptions.plan == f"promocode_{promocode.code}"
+        )
+    )
     pressed_promocodes: list = data.get("pressed_promocodes", [])
-    if promocode.code in pressed_promocodes:
+    if (promocode.code in pressed_promocodes) or activated_promocode:
         await message.answer(text=await get_text_message("deep_link_promocode_pressed"))
         return
     pressed_promocodes.append(promocode.code)
+
+    # проверяем есть ли закончились триггеры для данного промокода
     if (
         promocode.num_enable_triggers > 0
         and promocode.num_enable_triggers == promocode.num_activated
@@ -46,14 +66,20 @@ async def handler(
         return await message.answer(
             text=await get_text_message("deep_link_promocode_end")
         )
+
     sub_data = {
         "plan": f"promocode_{promocode.code}",
         "days_sub": promocode.days_sub,
+        "new_user": new_user,
     }
     promocode.num_activated += 1
     await state.update_data(
         promocode_sub=sub_data, pressed_promocodes=pressed_promocodes
     )
+
+    # если скидка промокода равна 100% то делаем подписку на бесплатный план,
+    # либо продлеваем если есть подписка
+    sub_free = False
     if promocode.discount == 100:
         days = promocode.days_sub if promocode.days_sub > 0 else 365 * 10
         date_end = datetime.now() + timedelta(days=days)
@@ -72,10 +98,20 @@ async def handler(
                 )
             )
         await session.commit()
-        return await message.answer(
+        await message.answer(
             text=await get_text_message("deep_link_promocode_free_pay")
         )
 
+        # если пользователь новый то отправляем ему главное меню
+        if new_user:
+            await state.clear()
+            await message.answer(
+                text=await get_text_message("start", name_=message.from_user.full_name),
+                reply_markup=await k_start_menu(),
+            )
+        return
+
+    # если скидка промокода не равна 100% то делаем счет на оплату подписки
     await session.commit()
     await subscription_price(
         message=message, discount=promocode.discount, session=session

@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from tools import get_text_message, end_life_invoice
+from bot.keyboards import k_start_menu
 import config
 
 router = Router()
@@ -60,6 +61,8 @@ async def process_successful_payment(
     message_id, _ = message.successful_payment.invoice_payload.split(":")
     with contextlib.suppress(Exception):
         await message.bot.delete_message(chat_id=message.chat.id, message_id=message_id)
+
+    # если в данных состояния есть данные о промо подписке тогда активируем ее
     data = await state.get_data()
     if sub_data := data.get("promocode_sub"):
         days = sub_data["days_sub"] if sub_data["days_sub"] > 0 else ALL_DAYS
@@ -73,13 +76,20 @@ async def process_successful_payment(
             session.add(
                 Subscriptions(
                     id_user=user.id_user,
-                    plan=data["plan"],
+                    plan=sub_data["plan"],
                     date_end=date_end,
                     date_start=datetime.now(),
                 )
             )
         await session.commit()
         await message.answer(text=await get_text_message("successful_payment"))
+
+        # если пользователь новый то отправляем ему главное меню
+        if sub_data["new_user"]:
+            await message.answer(
+                text=await get_text_message("start", name_=message.from_user.full_name),
+                reply_markup=await k_start_menu(),
+            )
         return
     subscription_period = await session.scalar(
         select(Value.value_int).where(Value.name == "subscription_period")

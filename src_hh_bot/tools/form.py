@@ -47,7 +47,7 @@ async def get_idpk_forms_by_tag(
         blacklist = await session.scalars(select(BlackList.id_user))
         blacklist = blacklist.all()
         forms = await session.scalars(
-            select([User.idpk, User.id_user]).where(
+            select(User.idpk, User.id_user).where(
                 and_(User.field_4 == tag, User.form_type == form_type)
             )
         )
@@ -71,7 +71,7 @@ async def get_idpk_forms(form_type: str, last_idpk_form: int | str) -> list:
         blacklist = await session.scalars(select(BlackList.id_user))
         blacklist = blacklist.all()
         forms = await session.scalars(
-            select([User.idpk, User.id_user]).where(User.form_type == form_type)
+            select(User.idpk, User.id_user).where(User.form_type == form_type)
         )
         forms = forms.all()
         forms = [form[0] for form in forms if form[1] not in blacklist]

@@ -12,7 +12,7 @@ from tools import (
     form_type_inverter,
     save_message,
     get_id_admin,
-    mention_html
+    mention_html,
 )
 from bot.states import ViewForm
 from bot.keyboards import (
@@ -84,6 +84,7 @@ async def view_all_form(
                 ),
             ),
         )
+        return
     await message.answer(
         text=await get_text_message(
             "viewing_form",
@@ -133,6 +134,7 @@ async def get_tag(
                 ),
             ),
         )
+        return
     await message.answer(
         text=await get_text_message(
             "viewing_form",
@@ -191,6 +193,7 @@ async def next_form(
                 ),
             ),
         )
+        return
     await message.answer(
         text=await get_text_message(
             "viewing_form",
@@ -279,7 +282,7 @@ async def get_reason_report(
             link_on_user=mention_html(
                 form.id_user,
                 form.name,
-            )
+            ),
         ),
         reply_markup=await k_ban(form.idpk),
     )

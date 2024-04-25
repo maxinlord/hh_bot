@@ -1,5 +1,5 @@
 from sqlalchemy import select, and_
-from db import User, SendedMessage
+from db import User, SendedMessage, BlackList
 from init_db import _sessionmaker_for_func
 from tools import get_text_message
 import random
@@ -42,12 +42,15 @@ async def delete_form(idpk_user: int) -> None:
 
 async def get_idpk_forms_by_tag(tag: str, form_type: str, last_idpk_form: int | str) -> list:
     async with _sessionmaker_for_func() as session:
+        blacklist = await session.scalars(select(BlackList.id_user))
+        blacklist = blacklist.all()
         forms = await session.scalars(
             select(User.idpk).where(
                 and_(User.field_4 == tag, User.form_type == form_type)
             )
         )
         forms = forms.all()
+        forms = [form for form in forms if form not in blacklist]
         if not last_idpk_form:
             return forms
         if not forms:
@@ -63,10 +66,13 @@ async def get_idpk_forms_by_tag(tag: str, form_type: str, last_idpk_form: int | 
 
 async def get_idpk_forms(form_type: str, last_idpk_form: int | str) -> list:
     async with _sessionmaker_for_func() as session:
+        blacklist = await session.scalars(select(BlackList.id_user))
+        blacklist = blacklist.all()
         forms = await session.scalars(
             select(User.idpk).where(User.form_type == form_type)
         )
         forms = forms.all()
+        forms = [form for form in forms if form not in blacklist]
         if not last_idpk_form:
             return forms
         if not forms:

@@ -46,7 +46,7 @@ async def get_idpk_forms_by_tag(
     async with _sessionmaker_for_func() as session:
         blacklist = await session.scalars(select(BlackList.id_user))
         blacklist = blacklist.all()
-        forms = await session.scalars(
+        forms = await session.execute(
             select(User.idpk, User.id_user).where(
                 and_(User.field_4 == tag, User.form_type == form_type)
             )
@@ -70,7 +70,7 @@ async def get_idpk_forms(form_type: str, last_idpk_form: int | str) -> list:
     async with _sessionmaker_for_func() as session:
         blacklist = await session.scalars(select(BlackList.id_user))
         blacklist = blacklist.all()
-        forms = await session.scalars(
+        forms = await session.execute(
             select(User.idpk, User.id_user).where(User.form_type == form_type)
         )
         forms = forms.all()

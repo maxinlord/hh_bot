@@ -16,6 +16,7 @@ from bot.keyboards import (
     k_options_for_photo,
     k_gen_bttn_tags_inline,
     k_main_menu,
+    k_skip,
 )
 from bot.filters import GetTextButton
 
@@ -101,10 +102,28 @@ async def get_form_one_field_2(
 async def form_one_field_3(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_one_field_3"), reply_markup=None
+    await query.message.delete()
+    await query.message.answer(
+        text=await get_text_message("form_one_field_3"), reply_markup=await k_skip()
     )
     await state.set_state(FormOneState.field_3)
+
+
+@router.message(FormOneState.field_3, GetTextButton("skip"))
+async def form_one_skip_url(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    text = await get_text_message("field_3_skip_url")
+    data = await state.update_data(field_3=text)
+    await message.answer(
+        text=await get_text_message("url_was_skipped"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        text=await get_text_message("form_one", **data),
+        reply_markup=await k_form_fields(),
+    )
+    await state.set_state(FormOneState.main)
 
 
 @router.message(FormOneState.field_3, F.entities[0].type == "url")

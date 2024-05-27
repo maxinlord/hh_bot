@@ -58,4 +58,8 @@ async def k_subscribe():
     builder.adjust(1)
     return builder.as_markup()
 
-
+async def k_skip():
+    builder = ReplyKeyboardBuilder()
+    builder.button(text=await get_text_button("skip"))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)

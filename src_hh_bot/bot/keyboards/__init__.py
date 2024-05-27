@@ -16,5 +16,6 @@ from .options_menu import (
     k_accept_or_reject,
     k_ban,
     k_subscribe,
+    k_skip
 )
 from .tags import k_gen_bttn_tags_inline, k_gen_bttn_tags_reply

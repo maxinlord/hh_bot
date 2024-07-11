@@ -1,17 +1,19 @@
-from datetime import datetime
-from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
-from aiogram import F, Router
+from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
 from bot.filters import GetTextButton
-from bot.states import FormOneState, FormTwoState
-from tools import get_text_message, ids_to_media_group, delete_form, ids_to_list
+from bot.states import FormOneState, FormTwoState, FormFourState, FormThreeState
+from tools import (
+    get_text_message,
+    ids_to_media_group,
+    delete_form,
+    to_dict_form_fields,
+    delete_markup,
+)
 from bot.keyboards import (
     k_start_menu,
-    k_types_of_reg,
-    k_back,
     k_main_menu,
     k_my_form_menu,
     k_form_fields,
@@ -20,6 +22,8 @@ from bot.keyboards import (
 
 
 router = Router()
+ADJUST_THREE = [2, 2, 2]
+ADJUST_FOUR = [2, 2, 2]
 
 
 @router.message(GetTextButton("my_form"))
@@ -27,48 +31,87 @@ async def menu_my_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
-    data["field_1"] = user.field_1
-    data["field_2"] = user.field_2
-    data["field_3"] = user.field_3
-    data["field_4"] = user.field_4
-    data["photos_id"] = ids_to_list(user.field_5) if user.field_5 else list()
-    data["field_5"] = (
-        await get_text_message("field_5", quantity_photo=len(data["photos_id"]))
-        if user.field_5
-        else await get_text_message("field_5_skip_photo")
-    )
+    form_fields = await to_dict_form_fields(user.form_fields)
+    if user.form_type in ["one", "two"]:
+        for field in ["field_1", "field_2", "field_3", "field_4"]:
+            data[field] = form_fields.get(field, "")
+        data["photos_id"] = form_fields.get("field_5", [])
+
+        data["field_5"] = (
+            await get_text_message("field_5", quantity_photo=len(data["photos_id"]))
+            if data["photos_id"]
+            else await get_text_message("field_5_skip_photo")
+        )
+    elif user.form_type in ["three", "four"]:
+        for field in ["field_1", "field_2", "field_3", "field_4", "field_5", "field_6"]:
+            data[field] = form_fields.get(field, "")
     await state.update_data(data)
+
     await message.answer(
         text=await get_text_message("open_form", **data),
         reply_markup=await k_my_form_menu(),
     )
-    if user.field_5:
+
+    if user.form_type in ["one", "two"] and data["photos_id"]:
         await message.answer_media_group(
             media=ids_to_media_group(
-                user.field_5, caption=await get_text_message("my_form", **data)
+                data["photos_id"],
+                caption=await get_text_message(f"my_form_{user.form_type}", **data),
             )
         )
-        return
-    await message.answer(text=await get_text_message("my_form", **data))
+    else:
+        await message.answer(
+            text=await get_text_message(f"my_form_{user.form_type}", **data)
+        )
 
 
 @router.message(GetTextButton("edit_my_form"))
+@delete_markup
 async def edit_my_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
-    await message.answer(
-        text=await get_text_message(f"form_{user.form_type}", **data),
-        reply_markup=await k_form_fields(form_type=user.form_type),
-    )
     match user.form_type:
         case "one":
+            msg = await message.answer(
+                text=await get_text_message(f"form_{user.form_type}", **data),
+                reply_markup=await k_form_fields(form_type=user.form_type),
+            )
             await state.set_state(FormOneState.main)
         case "two":
+            msg = await message.answer(
+                text=await get_text_message(f"form_{user.form_type}", **data),
+                reply_markup=await k_form_fields(form_type=user.form_type),
+            )
             await state.set_state(FormTwoState.main)
+        case "three":
+            msg = await message.answer(
+                text=await get_text_message(f"form_{user.form_type}", **data),
+                reply_markup=await k_form_fields(
+                    form_type=user.form_type,
+                    amount_fields=6,
+                    adjust=ADJUST_THREE,
+                    change_city=True,
+                ),
+            )
+            await state.set_state(FormThreeState.main)
+        case "four":
+            msg = await message.answer(
+                text=await get_text_message(f"form_{user.form_type}", **data),
+                reply_markup=await k_form_fields(
+                    form_type=user.form_type,
+                    amount_fields=6,
+                    adjust=ADJUST_FOUR,
+                    change_city=True,
+                ),
+            )
+            await state.set_state(FormFourState.main)
+    await state.update_data(data)
+    await state.update_data(msg_id=msg.message_id)
 
 
 @router.message(GetTextButton("delete_my_form"))
+@delete_markup
 async def delete_my_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
@@ -94,6 +137,7 @@ async def confirm_delete_my_form(
 
 
 @router.message(GetTextButton("back"))
+@delete_markup
 async def back_to_main_menu(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
@@ -107,5 +151,6 @@ async def back_to_options(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await message.answer(
-        text=await get_text_message("my_form_menu"), reply_markup=await k_my_form_menu(),
+        text=await get_text_message("my_form_menu"),
+        reply_markup=await k_my_form_menu(),
     )

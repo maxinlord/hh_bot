@@ -15,4 +15,4 @@ class GetTextButton(Filter):
 class FilterByTag(Filter):
 
     async def __call__(self, message: Message) -> bool:
-        return message.text in await get_tags()
+        return message.text in await get_tags() or message.text in await get_tags(name_tags='tags_form_34')

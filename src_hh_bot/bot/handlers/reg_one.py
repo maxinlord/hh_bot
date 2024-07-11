@@ -1,3 +1,4 @@
+import json
 from pprint import pprint
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.media_group import MediaGroupBuilder
@@ -14,7 +15,7 @@ from bot.keyboards import (
     Tag,
     k_form_fields,
     k_options_for_photo,
-    k_gen_bttn_tags_inline,
+    ik_gen_tags_form_12,
     k_main_menu,
     k_skip,
 )
@@ -30,11 +31,8 @@ async def menu_form_one(
 ) -> None:
     data = await state.get_data()
     no_set = await get_text_message("not_set")
-    data["field_1"] = no_set
-    data["field_2"] = no_set
-    data["field_3"] = no_set
-    data["field_4"] = no_set
-    data["field_5"] = no_set
+    fields_to_update = ["field_1", "field_2", "field_3", "field_4", "field_5"]
+    data.update({field: no_set for field in fields_to_update})
     data["photos_id"] = []
     await state.update_data(data)
     await query.message.edit_text(
@@ -146,7 +144,7 @@ async def form_one_field_4(
 ) -> None:
     await query.message.edit_text(
         text=await get_text_message("form_one_field_4"),
-        reply_markup=await k_gen_bttn_tags_inline(),
+        reply_markup=await ik_gen_tags_form_12(),
     )
     await state.set_state(FormOneState.field_4)
 
@@ -272,11 +270,16 @@ async def form_one_end_reg(
         )
         return
     user.form_type = "one"
-    user.field_1 = data["field_1"]
-    user.field_2 = data["field_2"]
-    user.field_3 = data["field_3"]
-    user.field_4 = data["field_4"]
-    user.field_5 = ", ".join(data["photos_id"]) if len(data["photos_id"]) != 0 else None
+    form_fields = {
+        "field_1": data["field_1"],
+        "field_2": data["field_2"],
+        "field_3": data["field_3"],
+        "field_4": data["field_4"],
+    }
+    field_5 = data["photos_id"] or None
+    if field_5:
+        form_fields["field_5"] = field_5
+    user.form_fields = json.dumps(form_fields)
     await session.commit()
     await state.clear()
     await query.message.edit_reply_markup(reply_markup=None)

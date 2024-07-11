@@ -2,13 +2,30 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from tools import get_text_button
 from bot.keyboards import Form
 
-async def k_form_fields(form_type: str = 'one'):
+
+async def k_form_fields(
+    form_type: str = "one",
+    amount_fields: int = 5,
+    adjust: list = None,
+    change_city: bool = False,
+):
+    if not adjust:
+        adjust = [1, 2, 2]
     builder = InlineKeyboardBuilder()
-    builder.button(text=await get_text_button(f'form_{form_type}_field_1'), callback_data=Form())
-    builder.button(text=await get_text_button(f'form_{form_type}_field_2'), callback_data=Form(field=2))
-    builder.button(text=await get_text_button(f'form_{form_type}_field_3'), callback_data=Form(field=3))
-    builder.button(text=await get_text_button(f'form_{form_type}_field_4'), callback_data=Form(field=4))
-    builder.button(text=await get_text_button(f'form_{form_type}_field_5'), callback_data=Form(field=5))
-    builder.button(text=await get_text_button('end_reg'), callback_data=f'end_reg_{form_type}')
-    builder.adjust(1, 2, 2, 1)
+    for i in range(1, amount_fields + 1):
+        builder.button(
+            text=await get_text_button(f"form_{form_type}_field_{i}"),
+            callback_data=Form(field=i),
+        )
+    tail = [1]
+    if change_city:
+        builder.button(
+            text=await get_text_button("change_city"),
+            callback_data=f"change_city_{form_type}",
+        )
+        tail.append(1)
+    builder.button(
+        text=await get_text_button("end_reg"), callback_data=f"end_reg_{form_type}"
+    )
+    builder.adjust(*adjust, *tail)
     return builder.as_markup()

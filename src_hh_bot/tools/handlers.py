@@ -1,5 +1,6 @@
 import contextlib
 from datetime import datetime, timedelta
+from functools import wraps
 from aiogram.types import CallbackQuery, Message, LabeledPrice, PreCheckoutQuery
 from db import User, Value, Subscriptions
 from aiogram import F, Router, Bot
@@ -29,3 +30,25 @@ async def subscription_price(message: Message, session: AsyncSession, discount: 
         ],
         payload=f"{message.message_id+1}:{end_life_invoice_}",
     )
+
+
+def delete_markup(func):
+    @wraps(func)
+    async def wrapper(
+        message: Message,
+        state: FSMContext,
+        session: AsyncSession,
+        user: User,
+        **kwargs,
+    ):
+        msg_id = (await state.get_data()).get("msg_id")
+        if msg_id:
+            with contextlib.suppress(Exception):
+                await message.bot.edit_message_reply_markup(
+                    chat_id=message.from_user.id,
+                    message_id=msg_id,
+                    reply_markup=None,
+                )
+        await func(message, state, session, user, **kwargs)
+
+    return wrapper

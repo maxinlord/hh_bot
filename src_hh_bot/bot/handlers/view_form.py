@@ -1,3 +1,4 @@
+import asyncio
 from aiogram.types import Message
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
@@ -6,22 +7,26 @@ from db import User
 import json
 from tools import (
     get_text_message,
-    get_idpk_forms_by_tag,
-    get_idpk_forms,
+    get_forms_idpk_by_tag,
+    get_forms_idpk,
     ids_to_media_group,
     form_type_inverter,
     save_message,
     get_id_admin,
     mention_html,
+    to_dict_form_fields,
+    get_city,
 )
 from bot.states import ViewForm
 from bot.keyboards import (
     k_main_menu,
     k_view_form_menu,
-    k_gen_bttn_tags_reply,
+    rk_gen_tags_form_12,
+    rk_gen_tags_form_34,
     k_back_reply,
     k_view_response,
     k_ban,
+    k_end_viewing_form
 )
 from bot.filters import GetTextButton, FilterByTag
 
@@ -33,10 +38,16 @@ router = Router()
 async def view_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await message.answer(
-        text=await get_text_message("choose_a_tag"),
-        reply_markup=await k_gen_bttn_tags_reply(),
-    )
+    if user.form_type in ["one", "two"]:
+        await message.answer(
+            text=await get_text_message("choose_a_tag"),
+            reply_markup=await rk_gen_tags_form_12(),
+        )
+    elif user.form_type in ["three", "four"]:
+        await message.answer(
+            text=await get_text_message("choose_a_tag"),
+            reply_markup=await rk_gen_tags_form_34(),
+        )
     await state.set_state(ViewForm.chose_tag)
 
 
@@ -56,43 +67,44 @@ async def view_all_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
-    idpk_forms: list[int] = await get_idpk_forms(
+    city = await get_city(user.form_fields)
+    forms_idpk: list[int] = await get_forms_idpk(
         form_type=form_type_inverter[user.form_type],
-        last_idpk_form=data.get("current_idpk", user.last_idpk_form),
+        last_form_idpk=data.get("current_idpk", user.last_idpk_form),
+        city=city,
     )
-    if not idpk_forms:
+    if not forms_idpk:
         await message.answer(
             text=await get_text_message("no_forms"),
         )
         return
-    form: User = await session.get(User, idpk_forms.pop(0))
-    await state.update_data(idpk_forms=idpk_forms, current_idpk=form.idpk, tag=None)
+    form: User = await session.get(User, forms_idpk.pop(0))
+    form_fields = await to_dict_form_fields(form.form_fields)
+    await state.update_data(forms_idpk=forms_idpk, current_idpk=form.idpk, tag=None)
     await message.answer(
         text=await get_text_message("search_forms"),
         reply_markup=await k_view_form_menu(),
     )
     await state.set_state(ViewForm.main)
-    if form.field_5:
-        await message.answer_media_group(
-            media=ids_to_media_group(
-                string_ids=form.field_5,
-                caption=await get_text_message(
-                    "viewing_form",
-                    field_1=form.field_1,
-                    field_2=form.field_2,
-                    field_3=form.field_3,
-                ),
-            ),
+    func = message.answer
+    mess_data = {
+        "text": await get_text_message(
+            f"viewing_form_{user.form_type}",
+            field_1=form_fields["field_1"],
+            field_2=form_fields["field_2"],
+            field_3=form_fields["field_3"],
+            field_4=form_fields["field_4"],
+            field_5=form_fields.get("field_5", None),
+            field_6=form_fields.get("field_6", None),
         )
-        return
-    await message.answer(
-        text=await get_text_message(
-            "viewing_form",
-            field_1=form.field_1,
-            field_2=form.field_2,
-            field_3=form.field_3,
-        ),
-    )
+    }
+    if user.form_type in ["one", "two"] and form_fields.get("field_5"):
+        func = message.answer_media_group
+        mess_data["media"] = ids_to_media_group(
+            ids=form_fields["field_5"],
+            caption=mess_data["text"],
+        )
+    await func(**mess_data)
 
 
 @router.message(ViewForm.chose_tag, FilterByTag())
@@ -101,19 +113,22 @@ async def get_tag(
 ) -> None:
     tag = message.text
     data = await state.get_data()
-    idpk_forms: list[int] = await get_idpk_forms_by_tag(
+    city = await get_city(user.form_fields)
+    forms_idpk: list[int] = await get_forms_idpk_by_tag(
         tag=tag,
         form_type=form_type_inverter[user.form_type],
-        last_idpk_form=data.get("current_idpk", user.last_idpk_form),
+        last_form_idpk=data.get("current_idpk", user.last_idpk_form),
+        city=city,
     )
-    if not idpk_forms:
+    if not forms_idpk:
         await message.answer(
             text=await get_text_message("no_forms_with_tag", tag=tag),
         )
         return
-    form: User = await session.get(User, idpk_forms.pop(0))
+    form: User = await session.get(User, forms_idpk.pop(0))
+    form_fields = await to_dict_form_fields(form.form_fields)
     await state.update_data(
-        idpk_forms=idpk_forms,
+        forms_idpk=forms_idpk,
         tag=tag,
         current_idpk=form.idpk,
     )
@@ -122,27 +137,72 @@ async def get_tag(
         reply_markup=await k_view_form_menu(),
     )
     await state.set_state(ViewForm.main)
-    if form.field_5:
-        await message.answer_media_group(
-            media=ids_to_media_group(
-                string_ids=form.field_5,
-                caption=await get_text_message(
-                    "viewing_form",
-                    field_1=form.field_1,
-                    field_2=form.field_2,
-                    field_3=form.field_3,
-                ),
-            ),
+    func = message.answer
+    mess_data = {
+        "text": await get_text_message(
+            f"viewing_form_{user.form_type}",
+            field_1=form_fields["field_1"],
+            field_2=form_fields["field_2"],
+            field_3=form_fields["field_3"],
+            field_4=form_fields["field_4"],
+            field_5=form_fields.get("field_5", None),
+            field_6=form_fields.get("field_6", None),
         )
-        return
-    await message.answer(
-        text=await get_text_message(
-            "viewing_form",
-            field_1=form.field_1,
-            field_2=form.field_2,
-            field_3=form.field_3,
-        ),
+    }
+    if user.form_type in ["one", "two"] and form_fields.get("field_5"):
+        func = message.answer_media_group
+        mess_data["media"] = ids_to_media_group(
+            ids=form_fields["field_5"],
+            caption=mess_data["text"],
+        )
+    await func(**mess_data)
+
+
+async def update_forms_idpk(data, user):
+    forms_idpk = data["forms_idpk"]
+    if not forms_idpk:
+        city = await get_city(user.form_fields)
+        if data["tag"]:
+            forms_idpk_updated = await get_forms_idpk_by_tag(
+                tag=data["tag"],
+                form_type=form_type_inverter[user.form_type],
+                last_form_idpk=data["current_idpk"],
+                city=city,
+            )
+        else:
+            forms_idpk_updated = await get_forms_idpk(
+                form_type=form_type_inverter[user.form_type],
+                last_form_idpk=data["current_idpk"],
+                city=city,
+            )
+        if not forms_idpk_updated:
+            return None
+        forms_idpk.extend(forms_idpk_updated)
+    return forms_idpk
+
+
+async def send_message(message, user, form_fields):
+    text_message = await get_text_message(
+        f"viewing_form_{user.form_type}",
+        field_1=form_fields["field_1"],
+        field_2=form_fields["field_2"],
+        field_3=form_fields["field_3"],
+        field_4=form_fields["field_4"],
+        field_5=form_fields.get("field_5", None),
+        field_6=form_fields.get("field_6", None),
     )
+    func = (
+        message.answer_media_group
+        if user.form_type in ["one", "two"] and form_fields.get("field_5")
+        else message.answer
+    )
+    mess_data = {"text": text_message}
+    if func == message.answer_media_group:
+        mess_data["media"] = ids_to_media_group(
+            ids=form_fields["field_5"],
+            caption=text_message,
+        )
+    await func(**mess_data)
 
 
 @router.message(ViewForm.main, GetTextButton("next"))
@@ -150,58 +210,23 @@ async def next_form(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
-    idpk_forms: list[int] = data["idpk_forms"]
-    if not idpk_forms:
-        if data["tag"]:
-            idpk_forms_updated = await get_idpk_forms_by_tag(
-                tag=data["tag"],
-                form_type=form_type_inverter[user.form_type],
-                last_idpk_form=data["current_idpk"],
-            )
-        else:
-            idpk_forms_updated = await get_idpk_forms(
-                form_type=form_type_inverter[user.form_type],
-                last_idpk_form=data["current_idpk"],
-            )
-        if not idpk_forms_updated:
-            if data["tag"]:
-                await message.answer(
-                    text=await get_text_message("forms_with_tag_the_end"),
-                )
-            else:
-                await message.answer(
-                    text=await get_text_message("no_forms"),
-                )
-            return
-        idpk_forms.extend(idpk_forms_updated)
-
-    form: User = await session.get(User, idpk_forms.pop(0))
+    forms_idpk = await update_forms_idpk(data, user)
+    if not forms_idpk:
+        await message.answer(
+            text=await get_text_message(
+                "forms_with_tag_the_end" if data["tag"] else "no_forms"
+            ),
+            reply_markup=await k_end_viewing_form()
+        )
+        return
+    form: User = await session.get(User, forms_idpk.pop(0))
+    form_fields = await to_dict_form_fields(form.form_fields)
     await state.update_data(
-        idpk_forms=idpk_forms,
+        forms_idpk=forms_idpk,
         current_idpk=form.idpk,
     )
     await state.set_state(ViewForm.main)
-    if form.field_5:
-        await message.answer_media_group(
-            media=ids_to_media_group(
-                string_ids=form.field_5,
-                caption=await get_text_message(
-                    "viewing_form",
-                    field_1=form.field_1,
-                    field_2=form.field_2,
-                    field_3=form.field_3,
-                ),
-            ),
-        )
-        return
-    await message.answer(
-        text=await get_text_message(
-            "viewing_form",
-            field_1=form.field_1,
-            field_2=form.field_2,
-            field_3=form.field_3,
-        ),
-    )
+    await send_message(message, user, form_fields)
 
 
 @router.message(ViewForm.main, GetTextButton("end_viewing_form"))
@@ -213,12 +238,9 @@ async def end_viewing_form(
         reply_markup=await k_main_menu(),
     )
     data = await state.get_data()
-    decoded_dict = json.loads(user.last_idpk_form or "{}")
+    decoded_dict: dict = json.loads(user.last_idpk_form or "{}")
     key = data["tag"] or "__all"
-    if decoded_dict:
-        decoded_dict[key] = data["current_idpk"]
-    else:
-        decoded_dict = {key: data["current_idpk"]}
+    decoded_dict[key] = data["current_idpk"]
     user.last_idpk_form = json.dumps(decoded_dict)
     await session.commit()
     await state.clear()
@@ -261,29 +283,46 @@ async def get_reason_report(
             text=await get_text_message("mess_report_too_long"),
         )
         return
-    await message.answer(
-        text=await get_text_message("your_reason_send"),
-        reply_markup=await k_view_form_menu(),
+
+    # Fetch text messages and reply markup concurrently
+    your_reason_send, view_form_menu = await asyncio.gather(
+        get_text_message("your_reason_send"), k_view_form_menu()
     )
+    await message.answer(
+        text=your_reason_send,
+        reply_markup=view_form_menu,
+    )
+
     data = await state.get_data()
-    reports: list = data.get("reports", [])
+    reports = data.setdefault("reports", [])
     reports.append(data["current_idpk"])
     await state.update_data(reports=reports)
+
     form = await session.get(User, data["current_idpk"])
+    form_fields = await to_dict_form_fields(form.form_fields)
     await state.set_state(ViewForm.main)
-    await message.bot.send_message(
-        chat_id=await get_id_admin(),
-        text=await get_text_message(
-            "report_form",
-            field_1=form.field_1,
-            field_2=form.field_2,
-            field_3=form.field_3,
+
+    # Fetch admin ID and text message concurrently
+    id_admin, report_text = await asyncio.gather(
+        get_id_admin(),
+        get_text_message(
+            f"report_form_{user.form_type}",
+            field_1=form_fields["field_1"],
+            field_2=form_fields["field_2"],
+            field_3=form_fields["field_3"],
+            field_4=form_fields["field_4"],
+            field_5=form_fields.get("field_5", None),
+            field_6=form_fields.get("field_6", None),
             reason=message.text,
             link_on_user=mention_html(
                 form.id_user,
                 form.name,
             ),
         ),
+    )
+    await message.bot.send_message(
+        chat_id=id_admin,
+        text=report_text,
         reply_markup=await k_ban(form.idpk),
     )
 
@@ -321,23 +360,27 @@ async def get_mess_response(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     if len(message.text) > MAX_SIZE_MESSAGE:
-        await message.answer(
-            text=await get_text_message("mess_too_long"),
-        )
+        await message.answer(text=await get_text_message("mess_too_long"))
         return
+
     await message.answer(
         text=await get_text_message("your_respond_send"),
         reply_markup=await k_view_form_menu(),
     )
+
     data = await state.get_data()
-    responses: list = data.get("responses", [])
-    responses.append(data["current_idpk"])
+    current_idpk = data["current_idpk"]
+    responses = data.get("responses", [])
+    responses.append(current_idpk)
     await state.update_data(responses=responses)
-    form = await session.get(User, data["current_idpk"])
+
+    form = await session.get(User, current_idpk)
     id_message = await save_message(message.text)
+
     await message.bot.send_message(
         chat_id=form.id_user,
         text=await get_text_message("you_have_response"),
         reply_markup=await k_view_response(id_message=id_message, idpk_form=user.idpk),
     )
+
     await state.set_state(ViewForm.main)

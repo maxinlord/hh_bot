@@ -7,6 +7,8 @@ def setup_message_routers() -> Router:
         start,
         reg_one,
         reg_two,
+        reg_three,
+        reg_four,
         errors,
         my_form,
         view_form,
@@ -20,6 +22,8 @@ def setup_message_routers() -> Router:
     router.include_router(start.router)
     router.include_router(reg_one.router)
     router.include_router(reg_two.router)
+    router.include_router(reg_three.router)
+    router.include_router(reg_four.router)
     router.include_router(view_form.router)
     router.include_router(my_form.router)
     router.include_router(answ_responses.router)

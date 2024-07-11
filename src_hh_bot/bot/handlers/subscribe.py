@@ -29,11 +29,11 @@ async def subscribe(
     await query.message.answer_invoice(
         title=await get_text_message("title_invoice"),
         description=await get_text_message("description_invoice"),
-        provider_token=config.PAY_TOKEN,
-        currency="rub",
+        provider_token="",
+        currency="XTR",
         prices=[
             LabeledPrice(
-                label=await get_text_message("label_invoice"), amount=price * 100
+                label=await get_text_message("label_invoice"), amount=price
             )
         ],
         payload=f"{query.message.message_id+1}:{end_life_invoice_}",

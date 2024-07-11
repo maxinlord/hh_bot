@@ -166,7 +166,7 @@ async def process_pre_reg_info(
     )
 
 
-@router.callback_query(F.data == "back")
+@router.callback_query(StateFilter(default_state), F.data == "back")
 async def process_back(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:

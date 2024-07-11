@@ -13,7 +13,7 @@ from aiogram.fsm.state import any_state
 router = Router()
 
 
-@router.message(Command(commands='reset'), StateFilter(any_state))
+@router.message(Command(commands="reset"), StateFilter(any_state))
 async def command_reset(
     message: Message,
     state: FSMContext,
@@ -22,3 +22,4 @@ async def command_reset(
     user: User | None,
 ) -> None:
     await state.clear()
+    await message.answer(text=await get_text_message("reset_done"))

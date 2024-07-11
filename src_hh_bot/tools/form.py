@@ -5,6 +5,7 @@ from tools import get_text_message
 import random
 import string
 import json
+import csv
 
 
 async def form_not_complete(
@@ -30,62 +31,71 @@ async def form_not_complete(
 async def delete_form(idpk_user: int) -> None:
     async with _sessionmaker_for_func() as session:
         user = await session.get(User, idpk_user)
-        user.field_1 = None
-        user.field_2 = None
-        user.field_3 = None
-        user.field_4 = None
-        user.field_5 = None
+        user.form_fields = None
         user.form_type = None
-        user.photos_id = None
         await session.commit()
 
 
-async def get_idpk_forms_by_tag(
-    tag: str, form_type: str, last_idpk_form: int | str
+async def get_forms_idpk_by_tag(
+    tag: str,
+    form_type: str,
+    last_form_idpk: int | str,
+    city: str = "",
 ) -> list:
     async with _sessionmaker_for_func() as session:
         blacklist = await session.scalars(select(BlackList.id_user))
-        blacklist = blacklist.all()
-        forms = await session.execute(
-            select(User.idpk, User.id_user).where(
-                and_(User.field_4 == tag, User.form_type == form_type)
+        forms = await session.scalars(
+            select(User.idpk).where(
+                and_(
+                    User.form_fields.contains(city),
+                    User.form_fields.contains(tag),
+                    User.form_type == form_type,
+                    User.id_user.not_in(blacklist),
+                )
             )
         )
-        forms = forms.all()
-        forms = [form[0] for form in forms if form[1] not in blacklist]
-        if not last_idpk_form:
+        forms = list(forms)
+        if not last_form_idpk:
             return forms
         if not forms:
             return []
-        match isinstance(last_idpk_form, int):
-            case True:
-                forms = split_list_index(forms, last_idpk_form)[1]
-            case False:
-                last_idpk_form: dict = json.loads(last_idpk_form)
-                forms = split_list_index(forms, last_idpk_form.get(tag, 0))[1]
-        return forms
+        if isinstance(last_form_idpk, int):
+            _, forms_idpk = split_list_index(forms, last_form_idpk)
+        else:
+            last_form_idpk: dict = json.loads(last_form_idpk)
+            _, forms_idpk = split_list_index(forms, last_form_idpk.get(tag, 0))
+        return forms_idpk
 
 
-async def get_idpk_forms(form_type: str, last_idpk_form: int | str) -> list:
+async def get_forms_idpk(
+    form_type: str, last_form_idpk: int | str, city: str = ""
+) -> list:
     async with _sessionmaker_for_func() as session:
-        blacklist = await session.scalars(select(BlackList.id_user))
-        blacklist = blacklist.all()
-        forms = await session.execute(
-            select(User.idpk, User.id_user).where(User.form_type == form_type)
+        blacklist = set(await session.scalars(select(BlackList.id_user)))
+        forms = await session.scalars(
+            select(User.idpk).where(
+                and_(
+                    User.form_type == form_type,
+                    User.id_user.not_in(blacklist),
+                    User.form_fields.contains(city),
+                )
+            )
         )
-        forms = forms.all()
-        forms = [form[0] for form in forms if form[1] not in blacklist]
-        if not last_idpk_form:
+        forms = list(forms)
+        if not forms or not last_form_idpk:
             return forms
-        if not forms:
-            return []
-        match isinstance(last_idpk_form, int):
-            case True:
-                forms = split_list_index(forms, last_idpk_form)[1]
-            case False:
-                last_idpk_form: dict = json.loads(last_idpk_form)
-                forms = split_list_index(forms, last_idpk_form.get("__all", 0))[1]
-        return forms
+
+        if isinstance(last_form_idpk, str):
+            last_form_idpk = json.loads(last_form_idpk).get("__all", 0)
+
+        _, forms_idpk = split_list_index(forms, last_form_idpk)
+        return forms_idpk
+
+
+async def get_city(form_fields: str) -> User:
+    form_fields = json.loads(form_fields)
+    city = form_fields.get("city", "")
+    return city
 
 
 def split_list_index(list_: list, element: any):
@@ -109,10 +119,7 @@ def split_list_index(list_: list, element: any):
     return first_part, second_part
 
 
-form_type_inverter = {
-    "one": "two",
-    "two": "one",
-}
+form_type_inverter = {"one": "two", "two": "one", "three": "four", "four": "three"}
 
 
 def gen_id(len_: int) -> str:
@@ -138,3 +145,26 @@ async def delete_message(id_message: str) -> None:
         )
         await session.delete(message)
         await session.commit()
+
+
+async def to_dict_form_fields(form_fields: str) -> dict:
+    form_fields = json.loads(form_fields)
+    return form_fields
+
+
+def load_cities(filename):
+    cities = set()
+    with open(filename, "r", encoding="utf-8") as file:
+        for row in csv.reader(file):
+            cities.add(row[6].strip())
+            if row[1] == "г":
+                cities.add(row[2].strip())
+    return cities
+
+
+# Загрузка списка городов из файла
+cities = load_cities("cities.csv")
+
+
+async def is_city_exist(city_name: str):
+    return city_name.strip().capitalize() in cities

@@ -10,10 +10,9 @@ from db import User, Value, SendedMessage
 from tools import (
     get_text_message,
     form_not_complete,
-    get_idpk_forms_by_tag,
-    get_idpk_forms,
+    get_forms_idpk_by_tag,
+    get_forms_idpk,
     ids_to_media_group,
-    ids_to_list,
     split_list_index,
     form_type_inverter,
     save_message,
@@ -25,11 +24,11 @@ from bot.keyboards import (
     Response,
     k_form_fields,
     k_options_for_photo,
-    k_gen_bttn_tags_inline,
+    ik_gen_tags_form_12,
     k_main_menu,
     k_back,
     k_view_form_menu,
-    k_gen_bttn_tags_reply,
+    rk_gen_tags_form_12,
     k_back_reply,
     k_view_response,
     k_accept_or_reject,
@@ -59,7 +58,7 @@ async def send_form_by_response(
     if form.field_5:
         await query.message.answer_media_group(
             media=ids_to_media_group(
-                string_ids=form.field_5,
+                ids=form.field_5,
                 caption=await get_text_message(
                     "viewing_form",
                     field_1=form.field_1,

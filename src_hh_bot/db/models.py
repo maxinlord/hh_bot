@@ -26,11 +26,7 @@ class User(Base):
     date_reg: Mapped[str] = mapped_column(DateTime)
     last_idpk_form: Mapped[str] = mapped_column(Text, nullable=True)
     form_type: Mapped[str] = mapped_column(String(length=64), nullable=True)
-    field_1: Mapped[str] = mapped_column(Text(4096), nullable=True)
-    field_2: Mapped[str] = mapped_column(Text(4096), nullable=True)
-    field_3: Mapped[str] = mapped_column(Text(4096), nullable=True)
-    field_4: Mapped[str] = mapped_column(Text(4096), nullable=True)
-    field_5: Mapped[str] = mapped_column(Text(4096), nullable=True)
+    form_fields: Mapped[str] = mapped_column(Text, nullable=True)
 
 
 class Subscriptions(Base):

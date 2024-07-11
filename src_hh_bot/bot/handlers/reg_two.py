@@ -1,3 +1,4 @@
+import json
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -12,7 +13,7 @@ from bot.keyboards import (
     k_form_fields,
     k_options_for_photo,
     k_main_menu,
-    k_gen_bttn_tags_inline,
+    ik_gen_tags_form_12,
     Tag,
 )
 from bot.states import FormTwoState
@@ -27,11 +28,8 @@ async def menu_form_two(
 ) -> None:
     data = await state.get_data()
     no_set = await get_text_message("not_set")
-    data["field_1"] = no_set
-    data["field_2"] = no_set
-    data["field_3"] = no_set
-    data["field_4"] = no_set
-    data["field_5"] = no_set
+    fields_to_update = ["field_1", "field_2", "field_3", "field_4", "field_5"]
+    data.update({field: no_set for field in fields_to_update})
     data["photos_id"] = []
     await state.update_data(data)
     await query.message.edit_text(
@@ -128,7 +126,7 @@ async def form_two_field_4(
 ) -> None:
     await query.message.edit_text(
         text=await get_text_message("form_two_field_4"),
-        reply_markup=await k_gen_bttn_tags_inline(),
+        reply_markup=await ik_gen_tags_form_12(),
     )
     await state.set_state(FormTwoState.field_4)
 
@@ -207,10 +205,9 @@ async def form_two_back(
     )
     await message.answer(
         text=await get_text_message("form_two", **data),
-        reply_markup=await k_form_fields(form_type='two'),
+        reply_markup=await k_form_fields(form_type="two"),
     )
     await state.set_state(FormTwoState.main)
-
 
 
 @router.message(FormTwoState.field_5, GetTextButton("skip"))
@@ -225,7 +222,7 @@ async def form_two_skip_photo(
     )
     await message.answer(
         text=await get_text_message("form_two", **data),
-        reply_markup=await k_form_fields(form_type='two'),
+        reply_markup=await k_form_fields(form_type="two"),
     )
     await state.set_state(FormTwoState.main)
 
@@ -255,11 +252,16 @@ async def form_two_end_reg(
         )
         return
     user.form_type = "two"
-    user.field_1 = data["field_1"]
-    user.field_2 = data["field_2"]
-    user.field_3 = data["field_3"]
-    user.field_4 = data["field_4"]
-    user.field_5 = ", ".join(data["photos_id"]) if len(data["photos_id"]) != 0 else None
+    form_fields = {
+        "field_1": data["field_1"],
+        "field_2": data["field_2"],
+        "field_3": data["field_3"],
+        "field_4": data["field_4"],
+    }
+    field_5 = data["photos_id"] or None
+    if field_5:
+        form_fields["field_5"] = field_5
+    user.form_fields = json.dumps(form_fields)
     await session.commit()
     await state.clear()
     await query.message.edit_reply_markup(reply_markup=None)

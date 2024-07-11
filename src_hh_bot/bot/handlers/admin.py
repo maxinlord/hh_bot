@@ -23,7 +23,7 @@ from bot.keyboards import (
     Tag,
     k_form_fields,
     k_options_for_photo,
-    k_gen_bttn_tags_inline,
+    ik_gen_tags_form_12,
     k_main_menu,
     k_promocode_menu,
     k_back,

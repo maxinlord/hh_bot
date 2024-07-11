@@ -11,6 +11,7 @@ from tools import (
     delete_form,
     to_dict_form_fields,
     delete_markup,
+    get_city,
 )
 from bot.keyboards import (
     k_start_menu,
@@ -43,7 +44,15 @@ async def menu_my_form(
             else await get_text_message("field_5_skip_photo")
         )
     elif user.form_type in ["three", "four"]:
-        for field in ["field_1", "field_2", "field_3", "field_4", "field_5", "field_6"]:
+        for field in [
+            "field_1",
+            "field_2",
+            "field_3",
+            "field_4",
+            "field_5",
+            "field_6",
+            "city",
+        ]:
             data[field] = form_fields.get(field, "")
     await state.update_data(data)
 

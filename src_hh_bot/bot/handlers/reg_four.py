@@ -4,7 +4,13 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
-from tools import get_text_message, form_not_complete, is_city_exist, delete_markup
+from tools import (
+    get_text_message,
+    form_not_complete,
+    is_city_exist,
+    delete_markup,
+    validate_input,
+)
 from bot.states import FormFourState
 from bot.keyboards import (
     Form,
@@ -163,7 +169,7 @@ async def form_four_field_4(
 async def get_form_four_field_4(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    if not message.text.isdigit():
+    if not validate_input(message.text):
         await message.answer(
             text=await get_text_message("form_four_field_4_error"),
             reply_markup=None,

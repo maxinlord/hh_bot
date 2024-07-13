@@ -1,4 +1,4 @@
-from .text import get_text_message, get_text_button, mention_html
+from .text import get_text_message, get_text_button, mention_html, validate_input
 from .photo import ids_to_media_group
 from .tags import get_tags, get_num_column_for_tags
 from .form import (

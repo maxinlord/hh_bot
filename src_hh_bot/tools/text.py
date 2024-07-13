@@ -92,3 +92,14 @@ def mention_html(id_user: int, name: str) -> str:
 
 def mention_html_by_username(username: str, name: str) -> str:
     return f'<a href="http://t.me/{username}">{name}</a>' if username else name
+
+
+def validate_input(input_str):
+    # Регулярное выражение для проверки формата
+    pattern = r'^\d{1,9}-\d{1,9}'
+    
+    # Проверка соответствия регулярному выражению
+    if re.match(pattern, input_str):
+        return True
+    else:
+        return False

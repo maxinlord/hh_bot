@@ -1,3 +1,4 @@
+import re
 from sqlalchemy import select
 from db import Text, Button, Value
 from init_db import _sessionmaker_for_func
@@ -97,9 +98,6 @@ def mention_html_by_username(username: str, name: str) -> str:
 def validate_input(input_str):
     # Регулярное выражение для проверки формата
     pattern = r'^\d{1,9}-\d{1,9}'
-    
+
     # Проверка соответствия регулярному выражению
-    if re.match(pattern, input_str):
-        return True
-    else:
-        return False
+    return bool(re.match(pattern, input_str))

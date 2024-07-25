@@ -279,7 +279,7 @@ async def form_one_end_reg(
     field_5 = data["photos_id"] or None
     if field_5:
         form_fields["field_5"] = field_5
-    user.form_fields = json.dumps(form_fields)
+    user.form_fields = json.dumps(form_fields, ensure_ascii=False)
     await session.commit()
     await state.clear()
     await query.message.edit_reply_markup(reply_markup=None)

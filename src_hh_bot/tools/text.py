@@ -97,7 +97,7 @@ def mention_html_by_username(username: str, name: str) -> str:
 
 def validate_input(input_str):
     # Регулярное выражение для проверки формата
-    pattern = r'^\d{1,9}-\d{1,9}'
+    pattern = r"^\d{1,9}-\d{1,9}р?$"
 
     # Проверка соответствия регулярному выражению
     return bool(re.match(pattern, input_str))

@@ -16,6 +16,7 @@ from tools import (
     mention_html,
     to_dict_form_fields,
     get_city,
+    save_viewing_form
 )
 from bot.states import ViewForm
 from bot.keyboards import (
@@ -237,13 +238,7 @@ async def end_viewing_form(
         text=await get_text_message("main_menu"),
         reply_markup=await k_main_menu(),
     )
-    data = await state.get_data()
-    decoded_dict: dict = json.loads(user.last_idpk_form or "{}")
-    key = data["tag"] or "__all"
-    decoded_dict[key] = data["current_idpk"]
-    user.last_idpk_form = json.dumps(decoded_dict)
-    await session.commit()
-    await state.clear()
+    await save_viewing_form(state=state, user=user, session=session)
 
 
 @router.message(ViewForm.main, GetTextButton("report"))

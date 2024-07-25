@@ -6,10 +6,10 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User, PromoCode, Subscriptions
-from tools import get_text_message, subscription_price
+from tools import get_text_message, subscription_price, save_viewing_form
 from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
 from aiogram.filters import StateFilter
-from aiogram.fsm.state import default_state
+from aiogram.fsm.state import default_state, any_state
 
 router = Router()
 
@@ -118,14 +118,14 @@ async def handler(
     )
 
 
-@router.message(CommandStart(), StateFilter(default_state))
+@router.message(CommandStart(), StateFilter(any_state))
 async def command_start(
     message: Message,
     state: FSMContext,
     session: AsyncSession,
     user: User | None,
 ) -> None:
-    await state.clear()
+    offset = 1
     if not user:
         user = User(
             id_user=message.from_user.id,
@@ -137,11 +137,21 @@ async def command_start(
         session.add(user)
         await session.commit()
     if not user.form_type:
+        await message.bot.delete_message(
+            chat_id=message.from_user.id, message_id=message.message_id - offset
+        )
         await message.answer(
             text=await get_text_message("start", name_=message.from_user.full_name),
             reply_markup=await k_start_menu(),
         )
         return
+    data = await state.get_data()
+    if data.get("current_idpk"):
+        await save_viewing_form(state=state, session=session, user=user)
+    await state.clear()
+    await message.bot.delete_message(
+        chat_id=message.from_user.id, message_id=message.message_id - offset
+    )
     await message.answer(
         text=await get_text_message("main_menu"), reply_markup=await k_main_menu()
     )

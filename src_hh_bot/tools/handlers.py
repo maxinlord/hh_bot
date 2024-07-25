@@ -1,6 +1,7 @@
 import contextlib
 from datetime import datetime, timedelta
 from functools import wraps
+import json
 from aiogram.types import CallbackQuery, Message, LabeledPrice, PreCheckoutQuery
 from db import User, Value, Subscriptions
 from aiogram import F, Router, Bot
@@ -52,3 +53,13 @@ def delete_markup(func):
         await func(message, state, session, user, **kwargs)
 
     return wrapper
+
+
+async def save_viewing_form(state, user, session):
+    data = await state.get_data()
+    decoded_dict: dict = json.loads(user.last_idpk_form or "{}")
+    key = data["tag"] or "__all"
+    decoded_dict[key] = data["current_idpk"]
+    user.last_idpk_form = json.dumps(decoded_dict, ensure_ascii=False)
+    await session.commit()
+    await state.clear()

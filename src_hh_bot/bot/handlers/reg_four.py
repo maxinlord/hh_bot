@@ -265,7 +265,7 @@ async def form_four_end_reg(
         "field_6": data["field_6"],
     }
 
-    user.form_fields = json.dumps(form_fields)
+    user.form_fields = json.dumps(form_fields, ensure_ascii=False)
     await session.commit()
     await state.clear()
     await query.message.edit_reply_markup(reply_markup=None)

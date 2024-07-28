@@ -63,3 +63,17 @@ async def save_viewing_form(state, user, session):
     user.last_idpk_form = json.dumps(decoded_dict, ensure_ascii=False)
     await session.commit()
     await state.clear()
+
+
+async def save_user(session: AsyncSession, message: Message, user: User | None) -> User:
+    if user:
+        return user
+    user = User(
+        id_user=message.from_user.id,
+        username=message.from_user.username
+        or await get_text_message("username_is_missing"),
+        name=message.from_user.full_name,
+        date_reg=datetime.now(),
+    )
+    session.add(user)
+    await session.commit()

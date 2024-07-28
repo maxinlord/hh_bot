@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User, PromoCode, Subscriptions
-from tools import get_text_message, subscription_price, save_viewing_form
+from tools import get_text_message, subscription_price, save_viewing_form, save_user
 from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import default_state, any_state
@@ -126,35 +126,23 @@ async def command_start(
     session: AsyncSession,
     user: User | None,
 ) -> None:
-    offset = 1
-    if not user:
-        user = User(
-            id_user=message.from_user.id,
-            username=message.from_user.username
-            or await get_text_message("username_is_missing"),
-            name=message.from_user.full_name,
-            date_reg=datetime.now(),
+    offset_id_message = -1
+    data = await state.get_data()
+    user = await save_user(message, session, user)
+    with contextlib.suppress(Exception):
+        await message.bot.delete_message(
+            chat_id=message.from_user.id,
+            message_id=message.message_id + offset_id_message,
         )
-        session.add(user)
-        await session.commit()
+    if data.get("current_idpk"):
+        await save_viewing_form(state=state, session=session, user=user)
+    await state.clear()
     if not user.form_type:
-        with contextlib.suppress(Exception):
-            await message.bot.delete_message(
-                chat_id=message.from_user.id, message_id=message.message_id - offset
-            )
         await message.answer(
             text=await get_text_message("start", name_=message.from_user.full_name),
             reply_markup=await k_start_menu(),
         )
         return
-    data = await state.get_data()
-    if data.get("current_idpk"):
-        await save_viewing_form(state=state, session=session, user=user)
-    await state.clear()
-    with contextlib.suppress(Exception):
-        await message.bot.delete_message(
-            chat_id=message.from_user.id, message_id=message.message_id - offset
-        )
     await message.answer(
         text=await get_text_message("main_menu"), reply_markup=await k_main_menu()
     )
@@ -175,7 +163,8 @@ async def process_pre_reg_info(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.edit_text(
-        text=await get_text_message("pre_reg_info"), reply_markup=await k_back(callback_data='back_to_start')
+        text=await get_text_message("pre_reg_info"),
+        reply_markup=await k_back(callback_data="back_to_start"),
     )
 
 

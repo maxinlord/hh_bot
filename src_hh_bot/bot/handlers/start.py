@@ -149,9 +149,12 @@ async def command_start(
     if data.get("current_idpk"):
         await save_viewing_form(state=state, session=session, user=user)
     await state.clear()
-    await message.bot.delete_message(
-        chat_id=message.from_user.id, message_id=message.message_id - offset
-    )
+    try:
+        await message.bot.delete_message(
+            chat_id=message.from_user.id, message_id=message.message_id - offset
+        )
+    except Exception:
+        pass
     await message.answer(
         text=await get_text_message("main_menu"), reply_markup=await k_main_menu()
     )

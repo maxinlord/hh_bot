@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
-from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from bot.handlers import setup_message_routers
 from bot.middlewares import DBSessionMiddleware, CheckUser, CheckSubscription
 from db import Base
@@ -48,7 +48,8 @@ async def set_default_commands(bot: Bot):
 
 async def main() -> None:
 
-    dp = Dispatcher(_engine=_engine, storage=RedisStorage(redis=redis))
+    df = DefaultKeyBuilder(prefix='hh_bot')
+    dp = Dispatcher(_engine=_engine, storage=RedisStorage(redis=redis, key_builder=df))
 
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)

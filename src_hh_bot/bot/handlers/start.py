@@ -175,11 +175,11 @@ async def process_pre_reg_info(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.edit_text(
-        text=await get_text_message("pre_reg_info"), reply_markup=await k_back()
+        text=await get_text_message("pre_reg_info"), reply_markup=await k_back(callback_data='back_to_start')
     )
 
 
-@router.callback_query(StateFilter(default_state), F.data == "back")
+@router.callback_query(StateFilter(default_state), F.data == "back_to_start")
 async def process_back(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:

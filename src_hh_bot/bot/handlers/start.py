@@ -1,3 +1,4 @@
+import contextlib
 from datetime import datetime, timedelta
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import Message, CallbackQuery
@@ -137,9 +138,10 @@ async def command_start(
         session.add(user)
         await session.commit()
     if not user.form_type:
-        await message.bot.delete_message(
-            chat_id=message.from_user.id, message_id=message.message_id - offset
-        )
+        with contextlib.suppress(Exception):
+            await message.bot.delete_message(
+                chat_id=message.from_user.id, message_id=message.message_id - offset
+            )
         await message.answer(
             text=await get_text_message("start", name_=message.from_user.full_name),
             reply_markup=await k_start_menu(),
@@ -149,12 +151,10 @@ async def command_start(
     if data.get("current_idpk"):
         await save_viewing_form(state=state, session=session, user=user)
     await state.clear()
-    try:
+    with contextlib.suppress(Exception):
         await message.bot.delete_message(
             chat_id=message.from_user.id, message_id=message.message_id - offset
         )
-    except Exception:
-        pass
     await message.answer(
         text=await get_text_message("main_menu"), reply_markup=await k_main_menu()
     )

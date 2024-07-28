@@ -179,8 +179,8 @@ async def process_pre_reg_info(
     )
 
 
-@router.callback_query(StateFilter(default_state), F.data == "back_to_start")
-async def process_back(
+@router.callback_query(F.data == "back_to_start")
+async def process_back_to_start(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.edit_text(

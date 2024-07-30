@@ -15,7 +15,7 @@ from bot.keyboards import (
     k_options_for_photo,
     k_main_menu,
     ik_gen_tags_form_12,
-    k_back_reply,
+    rk_back_to_menu_form,
 )
 from bot.states import FormTwoState
 from aiogram.filters import StateFilter
@@ -43,7 +43,7 @@ async def menu_form_two(
 
 @router.message(
     StateFilter(FormTwoState.field_1, FormTwoState.field_2, FormTwoState.field_3),
-    GetTextButton("back"),
+    GetTextButton("back_to_menu_form"),
 )
 async def back_to_menu_form_two(
     message: Message, state: FSMContext, session: AsyncSession, user: User
@@ -66,7 +66,7 @@ async def form_two_field_1(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_two_field_1"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_two_field_1"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormTwoState.field_1)
 
@@ -94,7 +94,7 @@ async def form_two_field_2(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_two_field_2"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_two_field_2"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormTwoState.field_2)
 
@@ -122,7 +122,7 @@ async def form_two_field_3(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_two_field_3"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_two_field_3"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormTwoState.field_3)
 

@@ -1,4 +1,4 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from tools import get_text_button
 from bot.keyboards import Form
 
@@ -29,3 +29,9 @@ async def k_form_fields(
     )
     builder.adjust(*adjust, *tail)
     return builder.as_markup()
+
+
+async def rk_back_to_menu_form():
+    builder = ReplyKeyboardBuilder()
+    builder.button(text=await get_text_button("back_to_menu_form"))
+    return builder.as_markup(resize_keyboard=True)

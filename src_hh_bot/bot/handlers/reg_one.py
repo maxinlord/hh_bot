@@ -18,7 +18,7 @@ from bot.keyboards import (
     ik_gen_tags_form_12,
     k_main_menu,
     k_skip,
-    k_back_reply,
+    rk_back_to_menu_form,
 )
 from bot.filters import GetTextButton
 from aiogram.filters import StateFilter
@@ -45,7 +45,7 @@ async def menu_form_one(
 
 
 @router.message(
-    StateFilter(FormOneState.field_1, FormOneState.field_2), GetTextButton("back")
+    StateFilter(FormOneState.field_1, FormOneState.field_2), GetTextButton("back_to_menu_form")
 )
 async def back_to_menu_form_one(
     message: Message, state: FSMContext, session: AsyncSession, user: User
@@ -66,7 +66,7 @@ async def form_one_field_1(
     await query.message.delete_reply_markup()
     await query.message.answer(
         text=await get_text_message("form_one_field_1"),
-        reply_markup=await k_back_reply(),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormOneState.field_1)
 
@@ -95,7 +95,7 @@ async def form_one_field_2(
     await query.message.delete_reply_markup()
     await query.message.answer(
         text=await get_text_message("form_one_field_2"),
-        reply_markup=await k_back_reply(),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormOneState.field_2)
 

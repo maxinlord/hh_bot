@@ -21,7 +21,7 @@ from bot.keyboards import (
     k_main_menu,
     k_back,
     k_types_of_reg,
-    k_back_reply,
+    rk_back_to_menu_form,
     k_skip,
 )
 from aiogram.filters import StateFilter
@@ -95,7 +95,7 @@ async def get_form_three_enter_city(
         FormThreeState.field_3,
         FormThreeState.field_4,
     ),
-    GetTextButton("back"),
+    GetTextButton("back_to_menu_form"),
 )
 async def back_to_menu_form_three(
     message: Message, state: FSMContext, session: AsyncSession, user: User
@@ -120,7 +120,7 @@ async def form_three_field_1(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_1"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_three_field_1"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormThreeState.field_1)
 
@@ -145,7 +145,7 @@ async def form_three_field_2(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_2"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_three_field_2"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormThreeState.field_2)
 
@@ -170,7 +170,7 @@ async def form_three_field_3(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_3"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_three_field_3"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormThreeState.field_3)
 
@@ -195,7 +195,7 @@ async def form_three_field_4(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_4"), reply_markup=await k_back_reply()
+        text=await get_text_message("form_three_field_4"), reply_markup=await rk_back_to_menu_form()
     )
     await state.set_state(FormThreeState.field_4)
 

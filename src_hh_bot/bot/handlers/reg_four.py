@@ -1,5 +1,5 @@
 import json
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +20,12 @@ from bot.keyboards import (
     k_main_menu,
     k_back,
     k_types_of_reg,
+    k_back_reply,
+    k_skip,
 )
+from aiogram.filters import StateFilter
+from aiogram.fsm.state import default_state, any_state
+from bot.filters import GetTextButton
 
 
 router = Router()
@@ -83,12 +88,40 @@ async def get_form_four_enter_city(
     await state.set_state(FormFourState.main)
 
 
+@router.message(
+    StateFilter(
+        FormFourState.field_1,
+        FormFourState.field_2,
+        FormFourState.field_3,
+        FormFourState.field_4,
+    ),
+    GetTextButton("back"),
+)
+async def back_to_menu_form_four(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    data = await state.get_data()
+    await message.answer(
+        text=await get_text_message("back_to_menu_form"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        text=await get_text_message("form_four", **data),
+        reply_markup=await k_form_fields(
+            form_type="four", amount_fields=6, adjust=ADJUST
+        ),
+    )
+    await state.set_state(FormFourState.main)
+
+
 @router.callback_query(FormFourState.main, Form.filter(F.field == 1))
 async def form_four_field_1(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_four_field_1"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_four_field_1"),
+        reply_markup=await k_back_reply(),
     )
     await state.set_state(FormFourState.field_1)
 
@@ -111,8 +144,10 @@ async def get_form_four_field_1(
 async def form_four_field_2(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_four_field_2"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_four_field_2"),
+        reply_markup=await k_back_reply(),
     )
     await state.set_state(FormFourState.field_2)
 
@@ -135,8 +170,10 @@ async def get_form_four_field_2(
 async def form_four_field_3(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_four_field_3"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_four_field_3"),
+        reply_markup=await k_back_reply(),
     )
     await state.set_state(FormFourState.field_3)
 
@@ -159,8 +196,10 @@ async def get_form_four_field_3(
 async def form_four_field_4(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_four_field_4"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_four_field_4"),
+        reply_markup=await k_back_reply(),
     )
     await state.set_state(FormFourState.field_4)
 
@@ -189,10 +228,30 @@ async def get_form_four_field_4(
 async def form_four_field_5(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_four_field_5"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_four_field_5"), reply_markup=await k_skip()
     )
     await state.set_state(FormFourState.field_5)
+
+
+@router.message(FormFourState.field_5, GetTextButton("skip"))
+async def form_four_skip_url(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    text = await get_text_message("form_four_field_5_skip_url")
+    data = await state.update_data(field_5=text)
+    await message.answer(
+        text=await get_text_message("url_was_skipped"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        text=await get_text_message("form_four", **data),
+        reply_markup=await k_form_fields(
+            form_type="four", amount_fields=6, adjust=ADJUST
+        ),
+    )
+    await state.set_state(FormFourState.main)
 
 
 @router.message(FormFourState.field_5, F.entities[0].type == "url")

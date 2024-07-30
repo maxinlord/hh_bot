@@ -10,14 +10,16 @@ from bot.keyboards import Form
 from db import User, Value
 from tools import get_text_message, form_not_complete
 from bot.keyboards import (
+    Tag,
     k_form_fields,
     k_options_for_photo,
     k_main_menu,
     ik_gen_tags_form_12,
-    Tag,
+    k_back_reply,
 )
 from bot.states import FormTwoState
-
+from aiogram.filters import StateFilter
+from aiogram.fsm.state import default_state, any_state
 
 router = Router()
 
@@ -39,12 +41,32 @@ async def menu_form_two(
     await state.set_state(FormTwoState.main)
 
 
+@router.message(
+    StateFilter(FormTwoState.field_1, FormTwoState.field_2, FormTwoState.field_3),
+    GetTextButton("back"),
+)
+async def back_to_menu_form_two(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    data = await state.get_data()
+    await message.answer(
+        text=await get_text_message("back_to_menu_form"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        text=await get_text_message("form_two", **data),
+        reply_markup=await k_form_fields(form_type="two"),
+    )
+    await state.set_state(FormTwoState.main)
+
+
 @router.callback_query(FormTwoState.main, Form.filter(F.field == 1))
 async def form_two_field_1(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_two_field_1"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_two_field_1"), reply_markup=await k_back_reply()
     )
     await state.set_state(FormTwoState.field_1)
 
@@ -70,8 +92,9 @@ async def get_form_two_field_1(
 async def form_two_field_2(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_two_field_2"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_two_field_2"), reply_markup=await k_back_reply()
     )
     await state.set_state(FormTwoState.field_2)
 
@@ -97,8 +120,9 @@ async def get_form_two_field_2(
 async def form_two_field_3(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_two_field_3"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_two_field_3"), reply_markup=await k_back_reply()
     )
     await state.set_state(FormTwoState.field_3)
 

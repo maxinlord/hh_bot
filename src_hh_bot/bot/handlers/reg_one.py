@@ -18,9 +18,11 @@ from bot.keyboards import (
     ik_gen_tags_form_12,
     k_main_menu,
     k_skip,
+    k_back_reply,
 )
 from bot.filters import GetTextButton
-
+from aiogram.filters import StateFilter
+from aiogram.fsm.state import default_state, any_state
 
 router = Router()
 
@@ -42,12 +44,29 @@ async def menu_form_one(
     await state.set_state(FormOneState.main)
 
 
+@router.message(
+    StateFilter(FormOneState.field_1, FormOneState.field_2), GetTextButton("back")
+)
+async def back_to_menu_form_one(
+    message: Message, state: FSMContext, session: AsyncSession, user: User
+) -> None:
+    data = await state.get_data()
+    await message.answer(text=await get_text_message('back_to_menu_form'), reply_markup=ReplyKeyboardRemove())
+    await message.answer(
+        text=await get_text_message("form_one", **data),
+        reply_markup=await k_form_fields(),
+    )
+    await state.set_state(FormOneState.main)
+
+
 @router.callback_query(FormOneState.main, Form.filter(F.field == 1))
 async def form_one_field_1(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_one_field_1"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_one_field_1"),
+        reply_markup=await k_back_reply(),
     )
     await state.set_state(FormOneState.field_1)
 
@@ -73,8 +92,10 @@ async def get_form_one_field_1(
 async def form_one_field_2(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
-    await query.message.edit_text(
-        text=await get_text_message("form_one_field_2"), reply_markup=None
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message("form_one_field_2"),
+        reply_markup=await k_back_reply(),
     )
     await state.set_state(FormOneState.field_2)
 

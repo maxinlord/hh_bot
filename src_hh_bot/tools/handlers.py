@@ -77,3 +77,4 @@ async def save_user(session: AsyncSession, message: Message, user: User | None) 
     )
     session.add(user)
     await session.commit()
+    return user

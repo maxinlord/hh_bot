@@ -105,12 +105,13 @@ def split_list_index(list_: list, element: any):
     :param element: элемент списка
     :return: две части списка, без указанного элемента
     """
+
     if element == 0:
         return [], list_
     if element > list_[-1]:
         return [], []
     if element not in list_:
-        raise ValueError("Элемент не найден в списке")
+        return [], list_
     if len(list_) == 1:
         return [], []
     index = list_.index(element)

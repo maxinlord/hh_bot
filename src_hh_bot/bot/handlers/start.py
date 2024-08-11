@@ -128,7 +128,7 @@ async def command_start(
 ) -> None:
     offset_id_message = -1
     data = await state.get_data()
-    user = await save_user(message, session, user)
+    user = await save_user(session=session, user=user, message=message)
     with contextlib.suppress(Exception):
         await message.bot.delete_message(
             chat_id=message.from_user.id,

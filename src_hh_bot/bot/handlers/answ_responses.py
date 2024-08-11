@@ -1,3 +1,4 @@
+import json
 from pprint import pprint
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.media_group import MediaGroupBuilder
@@ -18,6 +19,7 @@ from tools import (
     save_message,
     mention_html,
     delete_message,
+    to_dict_form_fields,
 )
 from bot.states import ViewForm
 from bot.keyboards import (
@@ -55,27 +57,27 @@ async def send_form_by_response(
     )
     await delete_message(callback_data.id_message)
     await query.message.edit_reply_markup(reply_markup=None)
-    if form.field_5:
-        await query.message.answer_media_group(
-            media=ids_to_media_group(
-                ids=form.field_5,
-                caption=await get_text_message(
-                    "viewing_form",
-                    field_1=form.field_1,
-                    field_2=form.field_2,
-                    field_3=form.field_3,
-                ),
-            )
+    form_fields: dict = await to_dict_form_fields(form.form_fields)
+
+    func = query.message.answer
+    mess_data = {
+        "text": await get_text_message(
+            f"viewing_form_{user.form_type}",
+            field_1=form_fields["field_1"],
+            field_2=form_fields["field_2"],
+            field_3=form_fields["field_3"],
+            field_4=form_fields["field_4"],
+            field_5=form_fields.get("field_5"),
+            field_6=form_fields.get("field_6"),
         )
-    else:
-        await query.message.answer(
-            text=await get_text_message(
-                "viewing_form",
-                field_1=form.field_1,
-                field_2=form.field_2,
-                field_3=form.field_3,
-            ),
+    }
+    if form.form_type in ["one", "two"] and form_fields.get("field_5"):
+        func = query.message.answer_media_group
+        mess_data["media"] = ids_to_media_group(
+            ids=form_fields["field_5"],
+            caption=mess_data["text"],
         )
+    await func(**mess_data)
     await query.message.answer(
         text=mess_response,
         reply_markup=await k_accept_or_reject(callback_data.idpk_form),
@@ -90,13 +92,14 @@ async def response_accept(
     user: User,
 ) -> None:
     form = await session.get(User, query.data.split(":")[1])
+    user_form_fields = await to_dict_form_fields(user.form_fields)
     await query.bot.send_message(
         chat_id=form.id_user,
         text=await get_text_message(
             "response_accept",
-            field_1=user.field_1,
-            field_2=user.field_2,
-            field_3=user.field_3,
+            field_1=user_form_fields["field_1"],
+            field_2=user_form_fields["field_2"],
+            field_3=user_form_fields["field_3"],
             named_link=mention_html(
                 id_user=query.from_user.id,
                 name=await get_text_message("name_link_in_response"),

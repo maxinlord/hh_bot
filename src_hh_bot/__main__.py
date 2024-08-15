@@ -12,7 +12,7 @@ from init_db import _sessionmaker, _engine
 from init_db_redis import redis
 import config
 from tools import get_text_button
-from jobs import update_last_idpk_form
+from jobs import update_last_idpk_form, job_sec
 
 bot: Bot = Bot(
     config.BOT_TOKEN, parse_mode=ParseMode.HTML, disable_web_page_preview=True
@@ -29,7 +29,7 @@ async def on_shutdown(session: AsyncSession) -> None:
 
 
 async def scheduler() -> None:
-    # aioschedule.every(1).seconds.do(job_sec, bot=bot)
+    # aioschedule.every(1).seconds.do(job_sec)
     aioschedule.every().day.at("8:00").do(update_last_idpk_form)
     while True:
         await aioschedule.run_pending()

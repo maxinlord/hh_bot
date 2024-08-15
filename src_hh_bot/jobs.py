@@ -4,8 +4,8 @@ from db import User
 from init_db import _sessionmaker_for_func
 
 
-async def job_sec(bot: Bot) -> None:
-    pass
+async def job_sec() -> None:
+    await update_last_idpk_form()
 
 
 async def job_minute() -> None:

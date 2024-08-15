@@ -92,7 +92,7 @@ async def get_forms_idpk(
         return forms_idpk
 
 
-async def get_city(form_fields: str) -> User:
+async def get_city(form_fields: str) -> str:
     form_fields = json.loads(form_fields)
     city = form_fields.get("city", "")
     return city

@@ -10,7 +10,7 @@ from db import User, Value
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tools import end_life_invoice, get_text_message
+import tools
 
 
 async def subscription_price(message: Message, session: AsyncSession, discount: int):
@@ -19,18 +19,18 @@ async def subscription_price(message: Message, session: AsyncSession, discount: 
     )
     price = int(price * ((100 - discount) / 100)) if discount > 0 else price
     price = max(price, 80)
-    end_life_invoice_ = await end_life_invoice()
+    tools.end_life_invoice_ = await tools.end_life_invoice()
     await message.answer_invoice(
-        title=await get_text_message("title_invoice"),
-        description=await get_text_message("description_invoice"),
+        title=await tools.get_text_message("title_invoice"),
+        description=await tools.get_text_message("description_invoice"),
         provider_token=config.PAY_TOKEN,
         currency="rub",
         prices=[
             LabeledPrice(
-                label=await get_text_message("label_invoice"), amount=price * 100
+                label=await tools.get_text_message("label_invoice"), amount=price * 100
             )
         ],
-        payload=f"{message.message_id+1}:{end_life_invoice_}",
+        payload=f"{message.message_id+1}:{tools.end_life_invoice_}",
     )
 
 
@@ -72,7 +72,7 @@ async def save_user(session: AsyncSession, message: Message, user: User | None) 
     user = User(
         id_user=message.from_user.id,
         username=message.from_user.username
-        or await get_text_message("username_is_missing"),
+        or await tools.get_text_message("username_is_missing"),
         name=message.from_user.full_name,
         date_reg=datetime.now(),
     )

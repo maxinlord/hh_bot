@@ -7,7 +7,7 @@ from db import BlackList, SendedMessage, User
 from init_db import _sessionmaker_for_func
 from sqlalchemy import and_, select
 
-from tools import get_text_message
+import tools
 
 
 async def form_not_complete(
@@ -19,13 +19,13 @@ async def form_not_complete(
     :return: список незаполненных полей
     """
     not_complete_fields = []
-    not_set = await get_text_message("not_set")
+    not_set = await tools.get_text_message("not_set")
     for field, value in data.items():
         if field in field_to_skip:
             continue
         if value == not_set:
             not_complete_fields.append(
-                await get_text_message(f"form_{type_form}_{field}_not_complete")
+                await tools.get_text_message(f"form_{type_form}_{field}_not_complete")
             )
     return not_complete_fields
 

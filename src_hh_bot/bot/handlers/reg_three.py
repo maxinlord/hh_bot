@@ -1,32 +1,31 @@
-import contextlib
 import json
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+
 from aiogram import F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from tools import (
-    get_text_message,
-    form_not_complete,
-    is_city_exist,
-    delete_markup,
-    validate_input,
-)
-from bot.states import FormThreeState
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from bot.filters import GetTextButton
 from bot.keyboards import (
     Form,
-    k_form_fields,
-    ik_gen_tags_form_34,
     Tag,
-    k_main_menu,
+    ik_gen_tags_form_34,
     k_back,
+    k_form_fields,
+    k_main_menu,
+    k_skip,
     k_types_of_reg,
     rk_back_to_menu_form,
-    k_skip,
 )
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import default_state, any_state
-from bot.filters import GetTextButton
+from bot.states import FormThreeState
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    delete_markup,
+    form_not_complete,
+    get_text_message,
+    is_city_exist,
+    validate_input,
+)
 
 router = Router()
 ADJUST = [2, 2, 2]
@@ -120,7 +119,8 @@ async def form_three_field_1(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_1"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_three_field_1"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormThreeState.field_1)
 
@@ -145,7 +145,8 @@ async def form_three_field_2(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_2"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_three_field_2"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormThreeState.field_2)
 
@@ -170,7 +171,8 @@ async def form_three_field_3(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_3"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_three_field_3"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormThreeState.field_3)
 
@@ -195,7 +197,8 @@ async def form_three_field_4(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_three_field_4"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_three_field_4"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormThreeState.field_4)
 

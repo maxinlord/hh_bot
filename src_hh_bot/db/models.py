@@ -1,20 +1,12 @@
-from datetime import datetime
-from typing import List
 from sqlalchemy import (
     BigInteger,
-    Column,
-    Integer,
+    DateTime,
     String,
     Text,
-    DECIMAL,
-    DateTime,
-    Boolean,
-    ForeignKey,
-    JSON,
 )
-from .base import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from .base import Base
 
 
 class User(Base):

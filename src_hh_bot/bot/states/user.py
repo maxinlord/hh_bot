@@ -1,8 +1,9 @@
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 
 class User(StatesGroup):
     main = State()
+
 
 class Admin(StatesGroup):
     main = State()

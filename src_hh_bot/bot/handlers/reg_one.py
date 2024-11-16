@@ -1,28 +1,26 @@
 import json
-from pprint import pprint
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
-from aiogram.utils.media_group import MediaGroupBuilder
-from aiogram.enums import MessageEntityType
+
 from aiogram import F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Value
-from tools import get_text_message, form_not_complete
-from bot.states import FormOneState
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.utils.media_group import MediaGroupBuilder
+from bot.filters import GetTextButton
 from bot.keyboards import (
     Form,
     Tag,
-    k_form_fields,
-    k_options_for_photo,
     ik_gen_tags_form_12,
+    k_form_fields,
     k_main_menu,
+    k_options_for_photo,
     k_skip,
     rk_back_to_menu_form,
 )
-from bot.filters import GetTextButton
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import default_state, any_state
+from bot.states import FormOneState
+from db import User, Value
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import form_not_complete, get_text_message
 
 router = Router()
 
@@ -45,13 +43,17 @@ async def menu_form_one(
 
 
 @router.message(
-    StateFilter(FormOneState.field_1, FormOneState.field_2), GetTextButton("back_to_menu_form")
+    StateFilter(FormOneState.field_1, FormOneState.field_2),
+    GetTextButton("back_to_menu_form"),
 )
 async def back_to_menu_form_one(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     data = await state.get_data()
-    await message.answer(text=await get_text_message('back_to_menu_form'), reply_markup=ReplyKeyboardRemove())
+    await message.answer(
+        text=await get_text_message("back_to_menu_form"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
     await message.answer(
         text=await get_text_message("form_one", **data),
         reply_markup=await k_form_fields(),

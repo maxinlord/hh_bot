@@ -1,16 +1,13 @@
-from datetime import datetime
-from typing import Callable, Awaitable, Any
+from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
+from db import BlackList, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db import User, BlackList
-
 
 class CheckUser(BaseMiddleware):
-
     async def __call__(
         self,
         handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],

@@ -1,2 +1,2 @@
-from .user import User, Admin
-from .form import FormOneState, FormTwoState, FormThreeState, FormFourState, ViewForm
+from .form import FormFourState, FormOneState, FormThreeState, FormTwoState, ViewForm
+from .user import Admin, User

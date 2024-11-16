@@ -1,6 +1,6 @@
-from sqlalchemy import select
-from db import User, Value
+from db import Value
 from init_db import _sessionmaker_for_func
+from sqlalchemy import select
 
 
 async def get_id_admin() -> int:

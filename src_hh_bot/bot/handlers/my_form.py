@@ -1,26 +1,24 @@
-from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
+from aiogram.types import Message, ReplyKeyboardRemove
 from bot.filters import GetTextButton
-from bot.states import FormOneState, FormTwoState, FormFourState, FormThreeState
-from tools import (
-    get_text_message,
-    ids_to_media_group,
-    delete_form,
-    to_dict_form_fields,
-    delete_markup,
-    get_city,
-)
 from bot.keyboards import (
-    k_start_menu,
+    k_confirm_del_form,
+    k_form_fields,
     k_main_menu,
     k_my_form_menu,
-    k_form_fields,
-    k_confirm_del_form,
+    k_start_menu,
 )
-
+from bot.states import FormFourState, FormOneState, FormThreeState, FormTwoState
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    delete_form,
+    delete_markup,
+    get_text_message,
+    ids_to_media_group,
+    to_dict_form_fields,
+)
 
 router = Router()
 ADJUST_THREE = [2, 2, 2]

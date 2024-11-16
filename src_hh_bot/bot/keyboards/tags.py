@@ -1,6 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from tools import get_tags, get_num_column_for_tags, get_text_button
 from bot.keyboards import Tag
+from tools import get_num_column_for_tags, get_tags, get_text_button
 
 
 async def ik_gen_tags_form_12():

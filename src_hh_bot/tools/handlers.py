@@ -1,15 +1,16 @@
 import contextlib
-from datetime import datetime, timedelta
-from functools import wraps
 import json
-from aiogram.types import CallbackQuery, Message, LabeledPrice, PreCheckoutQuery
-from db import User, Value, Subscriptions
-from aiogram import F, Router, Bot
+from datetime import datetime
+from functools import wraps
+
+import config
 from aiogram.fsm.context import FSMContext
+from aiogram.types import LabeledPrice, Message
+from db import User, Value
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from tools import get_text_message, end_life_invoice
-import config
+
+from tools import end_life_invoice, get_text_message
 
 
 async def subscription_price(message: Message, session: AsyncSession, discount: int):

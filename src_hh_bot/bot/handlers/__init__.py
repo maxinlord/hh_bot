@@ -3,19 +3,19 @@ from aiogram import Router
 
 def setup_message_routers() -> Router:
     from . import (
+        admin,
+        answ_responses,
         any_unknown_message,
-        start,
-        reg_one,
-        reg_two,
-        reg_three,
-        reg_four,
+        commands,
         errors,
         my_form,
-        view_form,
-        answ_responses,
-        commands,
-        admin,
+        reg_four,
+        reg_one,
+        reg_three,
+        reg_two,
+        start,
         subscribe,
+        view_form,
     )
 
     router = Router()

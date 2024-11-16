@@ -1,36 +1,22 @@
-from pprint import pprint
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
-from aiogram.filters import Command
-from aiogram.utils.media_group import MediaGroupBuilder
-from aiogram.enums import MessageEntityType
 from aiogram import F, Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, PromoCode, BlackList
-from tools import (
-    get_text_message,
-    form_not_complete,
-    mention_html,
-    get_id_admin,
-    gen_id_promocode,
-    filter_by_keys,
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.deep_linking import create_start_link
+from bot.keyboards import (
+    Ban,
+    k_promocode_menu,
 )
 from bot.states import Admin
-from bot.keyboards import (
-    Form,
-    Ban,
-    Tag,
-    k_form_fields,
-    k_options_for_photo,
-    ik_gen_tags_form_12,
-    k_main_menu,
-    k_promocode_menu,
-    k_back,
+from db import BlackList, PromoCode, User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    filter_by_keys,
+    gen_id_promocode,
+    get_id_admin,
+    get_text_message,
+    mention_html,
 )
-from bot.filters import GetTextButton
-from aiogram.utils.deep_linking import create_start_link
-
 
 router = Router()
 

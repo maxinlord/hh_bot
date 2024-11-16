@@ -1,16 +1,14 @@
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Integer
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy import Column, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase, AsyncAttrs):
-    
     idpk: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     repr_cols_num = 3
     repr_cols = ()
-    
+
     def __repr__(self):
         cols = [
             f"{col}={getattr(self, col)}"

@@ -1,17 +1,16 @@
 from datetime import datetime
-from typing import Callable, Awaitable, Any
-from tools import get_text_message
+from typing import Any, Awaitable, Callable
+
 from aiogram import BaseMiddleware
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery, Message
+from bot.keyboards import k_subscribe
+from db import Subscriptions, Value
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from db import Value, Subscriptions
-from bot.keyboards import k_subscribe
+from tools import get_text_message
 
 
 class CheckSubscription(BaseMiddleware):
-
     async def __call__(
         self,
         handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],

@@ -1,14 +1,14 @@
 import contextlib
 from datetime import datetime, timedelta
-from aiogram.types import CallbackQuery, Message, LabeledPrice, PreCheckoutQuery
-from db import User, Value, Subscriptions
-from aiogram import F, Router, Bot
+
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, LabeledPrice, Message, PreCheckoutQuery
+from bot.keyboards import k_start_menu
+from db import Subscriptions, User, Value
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from tools import get_text_message, end_life_invoice
-from bot.keyboards import k_start_menu
-import config
+from tools import end_life_invoice, get_text_message
 
 router = Router()
 
@@ -32,9 +32,7 @@ async def subscribe(
         provider_token="",
         currency="XTR",
         prices=[
-            LabeledPrice(
-                label=await get_text_message("label_invoice"), amount=price
-            )
+            LabeledPrice(label=await get_text_message("label_invoice"), amount=price)
         ],
         payload=f"{query.message.message_id+1}:{end_life_invoice_}",
     )

@@ -1,25 +1,25 @@
 import json
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+
 from aiogram import F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.utils.media_group import MediaGroupBuilder
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from bot.filters import GetTextButton
-from bot.keyboards import Form
-from db import User, Value
-from tools import get_text_message, form_not_complete
 from bot.keyboards import (
+    Form,
     Tag,
-    k_form_fields,
-    k_options_for_photo,
-    k_main_menu,
     ik_gen_tags_form_12,
+    k_form_fields,
+    k_main_menu,
+    k_options_for_photo,
     rk_back_to_menu_form,
 )
 from bot.states import FormTwoState
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import default_state, any_state
+from db import User, Value
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import form_not_complete, get_text_message
 
 router = Router()
 
@@ -66,7 +66,8 @@ async def form_two_field_1(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_two_field_1"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_two_field_1"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormTwoState.field_1)
 
@@ -94,7 +95,8 @@ async def form_two_field_2(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_two_field_2"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_two_field_2"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormTwoState.field_2)
 
@@ -122,7 +124,8 @@ async def form_two_field_3(
 ) -> None:
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message("form_two_field_3"), reply_markup=await rk_back_to_menu_form()
+        text=await get_text_message("form_two_field_3"),
+        reply_markup=await rk_back_to_menu_form(),
     )
     await state.set_state(FormTwoState.field_3)
 

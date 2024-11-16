@@ -6,5 +6,3 @@ def ids_to_media_group(ids: list, caption: str = None):
     for id_ in ids:
         media_group.add_photo(media=id_)
     return media_group.build()
-
-

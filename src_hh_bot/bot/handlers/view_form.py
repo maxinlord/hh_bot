@@ -1,35 +1,35 @@
 import asyncio
-from aiogram.types import Message
+
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-import json
-from tools import (
-    get_text_message,
-    get_forms_idpk_by_tag,
-    get_forms_idpk,
-    ids_to_media_group,
-    form_type_inverter,
-    save_message,
-    get_id_admin,
-    mention_html,
-    to_dict_form_fields,
-    get_city,
-    save_viewing_form
-)
-from bot.states import ViewForm
+from aiogram.types import Message
+from bot.filters import FilterByTag, GetTextButton
 from bot.keyboards import (
+    k_back_reply,
+    k_ban,
+    k_end_viewing_form,
     k_main_menu,
     k_view_form_menu,
+    k_view_response,
     rk_gen_tags_form_12,
     rk_gen_tags_form_34,
-    k_back_reply,
-    k_view_response,
-    k_ban,
-    k_end_viewing_form
 )
-from bot.filters import GetTextButton, FilterByTag
+from bot.states import ViewForm
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    form_type_inverter,
+    get_city,
+    get_forms_idpk,
+    get_forms_idpk_by_tag,
+    get_id_admin,
+    get_text_message,
+    ids_to_media_group,
+    mention_html,
+    save_message,
+    save_viewing_form,
+    to_dict_form_fields,
+)
 
 MAX_SIZE_MESSAGE = 4096
 router = Router()
@@ -217,7 +217,7 @@ async def next_form(
             text=await get_text_message(
                 "forms_with_tag_the_end" if data["tag"] else "no_forms"
             ),
-            reply_markup=await k_end_viewing_form()
+            reply_markup=await k_end_viewing_form(),
         )
         return
     form: User = await session.get(User, forms_idpk.pop(0))

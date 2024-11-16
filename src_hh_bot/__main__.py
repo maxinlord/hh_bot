@@ -1,18 +1,19 @@
 import asyncio
+
 import aioschedule
+import config
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from aiogram.types import BotCommand
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
-from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from bot.handlers import setup_message_routers
-from bot.middlewares import DBSessionMiddleware, CheckUser, CheckSubscription
+from bot.middlewares import CheckSubscription, CheckUser, DBSessionMiddleware
 from db import Base
-from init_db import _sessionmaker, _engine
+from init_db import _engine, _sessionmaker
 from init_db_redis import redis
-import config
+from jobs import update_last_idpk_form
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from tools import get_text_button
-from jobs import update_last_idpk_form, job_sec
 
 bot: Bot = Bot(
     config.BOT_TOKEN, parse_mode=ParseMode.HTML, disable_web_page_preview=True
@@ -47,8 +48,7 @@ async def set_default_commands(bot: Bot):
 
 
 async def main() -> None:
-
-    df = DefaultKeyBuilder(prefix='hh_bot')
+    df = DefaultKeyBuilder(prefix="hh_bot")
     dp = Dispatcher(_engine=_engine, storage=RedisStorage(redis=redis, key_builder=df))
 
     dp.startup.register(on_startup)

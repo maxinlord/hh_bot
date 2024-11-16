@@ -1,16 +1,16 @@
 import contextlib
 from datetime import datetime, timedelta
-from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import Message, CallbackQuery
+
 from aiogram import F, Router
+from aiogram.filters import CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import any_state
+from aiogram.types import CallbackQuery, Message
+from bot.keyboards import k_back, k_main_menu, k_start_menu, k_types_of_reg
+from db import PromoCode, Subscriptions, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, PromoCode, Subscriptions
-from tools import get_text_message, subscription_price, save_viewing_form, save_user
-from bot.keyboards import k_start_menu, k_types_of_reg, k_back, k_main_menu
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import default_state, any_state
+from tools import get_text_message, save_user, save_viewing_form, subscription_price
 
 router = Router()
 

@@ -1,6 +1,6 @@
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from bot.keyboards import Ban, Response
 from tools import get_text_button
-from bot.keyboards import Response, Ban
 
 
 async def k_options_for_photo():
@@ -57,6 +57,7 @@ async def k_subscribe():
     builder.button(text=await get_text_button("subscribe"), callback_data="sub")
     builder.adjust(1)
     return builder.as_markup()
+
 
 async def k_skip():
     builder = ReplyKeyboardBuilder()

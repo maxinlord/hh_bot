@@ -1,7 +1,6 @@
-from aiogram import Bot
-from sqlalchemy import select, update
 from db import User
 from init_db import _sessionmaker_for_func
+from sqlalchemy import update
 
 
 async def job_sec() -> None:
@@ -15,6 +14,6 @@ async def job_minute() -> None:
 async def update_last_idpk_form() -> None:
     async with _sessionmaker_for_func() as session:
         await session.execute(
-            update(User).where(User.last_idpk_form != None).values(last_idpk_form=None)
+            update(User).where(User.last_idpk_form != None).values(last_idpk_form=None)  # noqa: E711
         )
         await session.commit()

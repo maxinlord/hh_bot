@@ -1,6 +1,6 @@
+import tools
 from aiogram.filters import Filter
 from aiogram.types import Message
-import tools
 
 
 class GetTextButton(Filter):
@@ -12,10 +12,8 @@ class GetTextButton(Filter):
 
 
 class FilterByTag(Filter):
-
     async def __call__(self, message: Message) -> bool:
         return (
             message.text in await tools.get_tags()
             or message.text in await tools.get_tags(name_tags="tags_form_34")
         )
-

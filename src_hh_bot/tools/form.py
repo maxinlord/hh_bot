@@ -1,11 +1,13 @@
-from sqlalchemy import select, and_
-from db import User, SendedMessage, BlackList
-from init_db import _sessionmaker_for_func
-from tools import get_text_message
+import csv
+import json
 import random
 import string
-import json
-import csv
+
+from db import BlackList, SendedMessage, User
+from init_db import _sessionmaker_for_func
+from sqlalchemy import and_, select
+
+from tools import get_text_message
 
 
 async def form_not_complete(
@@ -124,7 +126,6 @@ form_type_inverter = {"one": "two", "two": "one", "three": "four", "four": "thre
 
 
 def gen_id(len_: int) -> str:
-
     letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
     id_ = "".join(random.choice(letters) for _ in range(len_))
     return id_

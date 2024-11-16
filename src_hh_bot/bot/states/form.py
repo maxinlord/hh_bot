@@ -1,4 +1,4 @@
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 
 class FormOneState(StatesGroup):
@@ -9,6 +9,7 @@ class FormOneState(StatesGroup):
     field_4 = State()
     field_5 = State()
 
+
 class FormTwoState(StatesGroup):
     main = State()
     field_1 = State()
@@ -16,6 +17,7 @@ class FormTwoState(StatesGroup):
     field_3 = State()
     field_4 = State()
     field_5 = State()
+
 
 class FormThreeState(StatesGroup):
     main = State()
@@ -28,6 +30,7 @@ class FormThreeState(StatesGroup):
     field_5 = State()
     field_6 = State()
 
+
 class FormFourState(StatesGroup):
     main = State()
     enter_city = State()
@@ -38,6 +41,7 @@ class FormFourState(StatesGroup):
     field_4 = State()
     field_5 = State()
     field_6 = State()
+
 
 class ViewForm(StatesGroup):
     main = State()

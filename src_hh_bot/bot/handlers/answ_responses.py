@@ -1,42 +1,20 @@
-import json
-from pprint import pprint
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
-from aiogram.utils.media_group import MediaGroupBuilder
-from aiogram.enums import MessageEntityType
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Value, SendedMessage
-from tools import (
-    get_text_message,
-    form_not_complete,
-    get_forms_idpk_by_tag,
-    get_forms_idpk,
-    ids_to_media_group,
-    split_list_index,
-    form_type_inverter,
-    save_message,
-    mention_html,
-    delete_message,
-    to_dict_form_fields,
-)
-from bot.states import ViewForm
+from aiogram.types import CallbackQuery
 from bot.keyboards import (
     Response,
-    k_form_fields,
-    k_options_for_photo,
-    ik_gen_tags_form_12,
-    k_main_menu,
-    k_back,
-    k_view_form_menu,
-    rk_gen_tags_form_12,
-    k_back_reply,
-    k_view_response,
     k_accept_or_reject,
 )
-from bot.filters import GetTextButton, FilterByTag
-
+from db import SendedMessage, User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    delete_message,
+    get_text_message,
+    ids_to_media_group,
+    mention_html,
+    to_dict_form_fields,
+)
 
 router = Router()
 

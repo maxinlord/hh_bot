@@ -1,7 +1,6 @@
-from aiogram.types import Message, CallbackQuery
-from aiogram import F, Router
+from aiogram import Router
+from aiogram.types import CallbackQuery, Message
 from tools import get_text_message
-
 
 router = Router()
 

@@ -333,7 +333,7 @@ async def form_four_end_reg(
 
 
 @router.callback_query(FormFourState.main, F.data == "change_city_four")
-async def menu_form_four(
+async def change_city_four(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.edit_text(text=await get_text_message("form_four_enter_city"))

@@ -340,7 +340,7 @@ async def response(
 
 
 @router.message(ViewForm.response, GetTextButton("back"))
-async def back_to_viewing_menu(
+async def back_to_viewing_menu_response(
     message: Message, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await message.answer(

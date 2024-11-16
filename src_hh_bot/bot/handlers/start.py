@@ -80,7 +80,6 @@ async def handler(
 
     # если скидка промокода равна 100% то делаем подписку на бесплатный план,
     # либо продлеваем если есть подписка
-    sub_free = False
     if promocode.discount == 100:
         days = promocode.days_sub if promocode.days_sub > 0 else 365 * 10
         date_end = datetime.now() + timedelta(days=days)

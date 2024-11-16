@@ -7,7 +7,7 @@ def setup_message_routers() -> Router:
         answ_responses,
         any_unknown_message,
         commands,
-        errors,
+        errors,  # noqa: F401
         my_form,
         reg_four,
         reg_one,

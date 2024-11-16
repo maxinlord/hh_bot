@@ -333,7 +333,7 @@ async def form_three_end_reg(
 
 
 @router.callback_query(FormThreeState.main, F.data == "change_city_three")
-async def menu_form_three(
+async def change_city_three(
     query: CallbackQuery, state: FSMContext, session: AsyncSession, user: User
 ) -> None:
     await query.message.edit_text(text=await get_text_message("form_three_enter_city"))

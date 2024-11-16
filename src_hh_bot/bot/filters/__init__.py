@@ -1,1 +1,1 @@
-from .text import FilterByTag, GetTextButton
+from .text import FilterByTag, GetTextButton  # noqa: F401

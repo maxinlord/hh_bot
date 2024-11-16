@@ -96,8 +96,7 @@ async def get_forms_idpk(
 
 async def get_city(form_fields: str) -> str:
     form_fields = json.loads(form_fields)
-    city = form_fields.get("city", "")
-    return city
+    return form_fields.get("city", "")
 
 
 def split_list_index(list_: list, element: any):
@@ -127,8 +126,7 @@ form_type_inverter = {"one": "two", "two": "one", "three": "four", "four": "thre
 
 def gen_id(len_: int) -> str:
     letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
-    id_ = "".join(random.choice(letters) for _ in range(len_))
-    return id_
+    return "".join(random.choice(letters) for _ in range(len_))
 
 
 async def save_message(mess: str) -> str:
@@ -150,8 +148,7 @@ async def delete_message(id_message: str) -> None:
 
 
 async def to_dict_form_fields(form_fields: str) -> dict:
-    form_fields = json.loads(form_fields)
-    return form_fields
+    return json.loads(form_fields)
 
 
 def load_cities(filename):

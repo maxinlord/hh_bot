@@ -299,8 +299,7 @@ async def form_one_end_reg(
         "field_3": data["field_3"],
         "field_4": data["field_4"],
     }
-    field_5 = data["photos_id"] or None
-    if field_5:
+    if field_5 := data["photos_id"] or None:
         form_fields["field_5"] = field_5
     user.form_fields = json.dumps(form_fields, ensure_ascii=False)
     await session.commit()
